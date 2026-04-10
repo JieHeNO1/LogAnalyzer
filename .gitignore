@@ -1,0 +1,15 @@
+# 环境变量文件（包含 API Key）
+.env
+
+# 本地知识库数据
+knowledge_base.json
+vectorizer.pkl
+vectors.npy
+metadata.json
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# Streamlit 缓存
+.streamlit/

@@ -1,0 +1,8 @@
+streamlit
+openai>=1.0.0
+python-dotenv
+scikit-learn
+pillow
+requests
+pytesseract
+opencv-python-headless
