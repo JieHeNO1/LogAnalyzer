@@ -182,34 +182,30 @@ def parse_log_line(line, line_num):
 
 def find_relevant_context(log_lines, query, context_lines=80):
     """
-    完全模拟独立脚本 search_log.py 的检索逻辑：
+    极简检索：完全模拟 search_log.py 独立脚本的行为。
     - 将用户输入的 query 作为唯一关键词，不拆分。
-    - 忽略大小写，匹配所有包含该关键词的行。
-    - 提取每个匹配行的上下文，合并后返回。
+    - 找出所有包含该关键词的行（忽略大小写）。
+    - 合并所有匹配点的前后 context_lines 行。
     """
     if not query or not query.strip():
-        return []
-    
+        return [], 0
+
     keyword = query.strip().lower()
     matched_indices = []
-    
-    # 1. 找出所有包含关键词的行（忽略大小写）
     for i, line in enumerate(log_lines):
         if keyword in line.lower():
             matched_indices.append(i)
-    
+
     if not matched_indices:
-        return []
-    
-    # 2. 对每个匹配行，提取前后 context_lines 行，用集合去重
+        return [], 0
+
     included = set()
     for idx in matched_indices:
         start = max(0, idx - context_lines)
         end = min(len(log_lines), idx + context_lines + 1)
         included.update(range(start, end))
-    
-    # 3. 排序返回行号列表
-    return sorted(included)
+
+    return sorted(included), len(matched_indices)
 
 def generate_analysis(log_snippet, user_query, similar_cases=""):
     """调用 DeepSeek 生成分析报告（支持代理）"""
@@ -234,7 +230,7 @@ def generate_analysis(log_snippet, user_query, similar_cases=""):
 请以清晰的结构化Markdown格式输出。
 """
     try:
-        proxy_url = os.getenv("HTTP_PROXY")  # 支持环境变量配置代理
+        proxy_url = os.getenv("HTTP_PROXY")
         http_client = httpx.Client(proxy=proxy_url) if proxy_url else None
         
         client = openai.OpenAI(
@@ -293,6 +289,8 @@ with col1:
     st.subheader("📂 上传日志文件")
     uploaded_file = st.file_uploader("选择 .log 或 .txt 文件 (支持大文件/ANSI编码)", type=["log", "txt"])
 
+    log_content = ""
+    log_lines = []
     if uploaded_file:
         raw_data = uploaded_file.read()
         result = chardet.detect(raw_data)
@@ -306,8 +304,11 @@ with col1:
             st.text("\n".join(log_lines[:100]))
 
     st.subheader("❓ 问题描述")
-    user_query = st.text_area("请描述问题，例如：'频率校正信噪比异常 SSW_0x00000070' 或 '报错 SSW_0x00000070'",
-                             height=100)
+    user_query = st.text_area(
+        "请描述问题（建议直接输入错误代码，如：SSW_0x00000070）",
+        height=100,
+        placeholder="例如：SSW_0x00000070"
+    )
 
     st.subheader("🖼️ 图片上传 (可选，用于OCR识别)")
     uploaded_image = st.file_uploader("支持 PNG / JPG / JPEG", type=["png", "jpg", "jpeg"])
@@ -324,8 +325,8 @@ with col1:
 
 with col2:
     st.subheader("🔎 分析设置")
-    time_window = st.slider("上下文时间窗口 (秒)", 10, 120, 30)
-    max_context_lines = st.slider("最大上下文行数", 50, 2000, 500)
+    context_half_lines = st.slider("每个匹配点前后上下文行数", 20, 500, 80)
+    max_total_lines = st.slider("最大输出总行数", 100, 5000, 1500)
 
     analyze_btn = st.button("🚀 开始智能分析", type="primary", use_container_width=True)
 
@@ -337,24 +338,24 @@ if analyze_btn and uploaded_file and user_query:
         if ocr_text:
             full_query = f"{user_query}\n\n[图片OCR识别内容]\n{ocr_text}"
 
-        with st.spinner("正在解析日志并检索相关上下文..."):
-            log_lines_all = log_content.splitlines()
-
-            relevant_indices = find_relevant_context(log_lines_all, full_query, time_window)
+        with st.spinner("正在检索相关日志..."):
+            relevant_indices, match_count = find_relevant_context(log_lines, full_query, context_half_lines)
+            
             if not relevant_indices:
-                st.error("未找到相关日志，请尝试调整查询关键词或时间窗口")
+                st.error(f"未找到包含 '{user_query}' 的日志行。请检查关键词是否正确。")
             else:
-                if len(relevant_indices) > max_context_lines:
-                    relevant_indices = relevant_indices[:max_context_lines]
+                st.success(f"✅ 在 {len(log_lines)} 行日志中找到 {match_count} 处匹配，提取了 {len(relevant_indices)} 行上下文。")
+                
+                if len(relevant_indices) > max_total_lines:
+                    relevant_indices = relevant_indices[:max_total_lines]
+                    st.warning(f"上下文行数超过限制，已截取前 {max_total_lines} 行。")
 
-                context_lines = [log_lines_all[i] for i in relevant_indices]
+                context_lines = [log_lines[i] for i in relevant_indices]
                 log_snippet = "\n".join(context_lines)
-
-                st.info(f"📊 已提取相关日志行数: {len(context_lines)}，总字符数: {len(log_snippet)}")
 
                 highlighted = []
                 for line in context_lines:
-                    if "Error" in line or "error" in line or "SSW_0x" in line:
+                    if user_query.lower() in line.lower():
                         highlighted.append(f"<span style='background-color:#ffcccc'>{line}</span>")
                     else:
                         highlighted.append(line)
@@ -434,7 +435,7 @@ if analyze_btn and uploaded_file and user_query:
                         st.warning("请输入解决方案内容")
 
 else:
-    st.info("👆 请上传日志文件并输入问题描述，然后点击「开始智能分析」")
+    st.info("👆 请上传日志文件并输入问题描述（建议直接输入错误代码如 SSW_0x00000070），然后点击「开始智能分析」")
 
 st.divider()
 st.caption("Powered by Streamlit + DeepSeek + DashScope OCR + scikit-learn")
