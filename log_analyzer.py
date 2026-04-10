@@ -182,34 +182,34 @@ def parse_log_line(line, line_num):
 
 def find_relevant_context(log_lines, query, context_lines=80):
     """
-    全量上下文检索：
-    1. 用用户输入的完整字符串作为关键词（不再拆分）。
-    2. 找出所有匹配行。
-    3. 对每个匹配行提取前后 context_lines 行。
-    4. 合并所有区间，去重后按行号排序返回。
+    完全模拟独立脚本 search_log.py 的检索逻辑：
+    - 将用户输入的 query 作为唯一关键词，不拆分。
+    - 忽略大小写，匹配所有包含该关键词的行。
+    - 提取每个匹配行的上下文，合并后返回。
     """
-    keyword = query.strip()
-    if not keyword:
+    if not query or not query.strip():
         return []
-
+    
+    keyword = query.strip().lower()
     matched_indices = []
-    keyword_lower = keyword.lower()
+    
+    # 1. 找出所有包含关键词的行（忽略大小写）
     for i, line in enumerate(log_lines):
-        if keyword_lower in line.lower():
+        if keyword in line.lower():
             matched_indices.append(i)
-
+    
     if not matched_indices:
         return []
-
-    # 收集所有需要包含的行号（用集合去重）
-    included_lines = set()
+    
+    # 2. 对每个匹配行，提取前后 context_lines 行，用集合去重
+    included = set()
     for idx in matched_indices:
         start = max(0, idx - context_lines)
         end = min(len(log_lines), idx + context_lines + 1)
-        included_lines.update(range(start, end))
-
-    # 排序返回
-    return sorted(included_lines)
+        included.update(range(start, end))
+    
+    # 3. 排序返回行号列表
+    return sorted(included)
 
 def generate_analysis(log_snippet, user_query, similar_cases=""):
     """调用 DeepSeek 生成分析报告（支持代理）"""
