@@ -10,9 +10,10 @@ from pathlib import Path
 from io import BytesIO
 from PIL import Image
 from dotenv import load_dotenv
-import chardet
 
 import openai
+import httpx
+import chardet
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -104,11 +105,9 @@ def find_similar_solutions(query, vectorizer, vectors, metadata, top_k=2):
 # ==================== OCR 功能 ====================
 
 def ocr_image_dashscope(image_bytes):
-    """使用阿里云 DashScope 视觉模型进行 OCR"""
     if not DASHSCOPE_API_KEY:
         return None
     try:
-        # 将图片转为 base64
         img_base64 = base64.b64encode(image_bytes).decode("utf-8")
         headers = {
             "Authorization": f"Bearer {DASHSCOPE_API_KEY}",
@@ -138,7 +137,6 @@ def ocr_image_dashscope(image_bytes):
         return None
 
 def ocr_image_tesseract(image_bytes):
-    """使用本地 Tesseract 进行 OCR"""
     if not TESSERACT_AVAILABLE:
         return None
     try:
@@ -150,19 +148,16 @@ def ocr_image_tesseract(image_bytes):
         return None
 
 def perform_ocr(uploaded_file):
-    """执行 OCR，优先使用 DashScope，失败则回退 Tesseract"""
     image_bytes = uploaded_file.read()
-    # 尝试 DashScope
     text = ocr_image_dashscope(image_bytes)
     if text is not None:
         return text, "DashScope"
-    # 回退 Tesseract
     text = ocr_image_tesseract(image_bytes)
     if text is not None:
         return text, "Tesseract (本地)"
     return None, "OCR 失败"
 
-# ==================== 日志解析 ====================
+# ==================== 日志解析与检索 ====================
 
 def parse_log_line(line, line_num):
     pattern = r'^(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\s+(\w+)\s+(\w+)\s+(\w+)\s+(\S+)\s+(.*)$'
@@ -186,11 +181,18 @@ def parse_log_line(line, line_num):
     return None
 
 def find_relevant_context(log_lines, query, time_window_sec=30):
-    """根据关键词和时间窗口返回上下文行号"""
-    keywords = re.findall(r'SSW_0x[0-9a-fA-F]+|Error|error|Exception|fail|timeout|\w+', query)
+    # 优先提取错误码
+    error_codes = re.findall(r'SSW_0x[0-9a-fA-F]+|\b[A-Z]+_\d+\b', query)
+    # 提取中英文单词
+    words = re.findall(r'[\u4e00-\u9fff]{2,}|[a-zA-Z]{3,}', query)
+    keywords = list(set(error_codes + words))
+    if not keywords:
+        keywords = query.split()
+    
     matched_indices = []
     for i, line in enumerate(log_lines):
-        if any(kw.lower() in line.lower() for kw in keywords):
+        line_lower = line.lower()
+        if any(kw.lower() in line_lower for kw in keywords):
             matched_indices.append(i)
     if not matched_indices:
         return []
@@ -221,7 +223,7 @@ def find_relevant_context(log_lines, query, time_window_sec=30):
     return list(range(start_idx, end_idx + 1))
 
 def generate_analysis(log_snippet, user_query, similar_cases=""):
-    """调用 DeepSeek 生成分析报告（兼容 openai>=1.0.0）"""
+    """调用 DeepSeek 生成分析报告（支持代理）"""
     prompt = f"""
 你是一名资深的MRI系统软件和硬件日志分析专家。请根据以下日志片段（按时间顺序排列）和用户的问题描述，进行详细的原因分析。
 
@@ -243,10 +245,13 @@ def generate_analysis(log_snippet, user_query, similar_cases=""):
 请以清晰的结构化Markdown格式输出。
 """
     try:
-        # 新版客户端初始化
+        proxy_url = os.getenv("HTTP_PROXY")  # 支持环境变量配置代理
+        http_client = httpx.Client(proxy=proxy_url) if proxy_url else None
+        
         client = openai.OpenAI(
             api_key=openai.api_key,
-            base_url=openai.api_base
+            base_url=openai.api_base,
+            http_client=http_client
         )
         response = client.chat.completions.create(
             model=DEEPSEEK_MODEL,
@@ -301,20 +306,37 @@ with col1:
 
     if uploaded_file:
         raw_data = uploaded_file.read()
-        # 自动检测编码
         result = chardet.detect(raw_data)
         encoding = result['encoding'] if result['encoding'] else 'gbk'
         st.caption(f"检测到文件编码: {encoding}")
         log_content = raw_data.decode(encoding, errors='ignore')
         log_lines = log_content.splitlines()
         st.success(f"已加载 {len(log_lines)} 行日志")
+
         with st.expander("📄 日志预览 (前100行)"):
             st.text("\n".join(log_lines[:100]))
+
+    st.subheader("❓ 问题描述")
+    user_query = st.text_area("请描述问题，例如：'频率校正信噪比异常 SSW_0x00000070' 或 '报错 SSW_0x00000070'",
+                             height=100)
+
+    st.subheader("🖼️ 图片上传 (可选，用于OCR识别)")
+    uploaded_image = st.file_uploader("支持 PNG / JPG / JPEG", type=["png", "jpg", "jpeg"])
+    ocr_text = ""
+    if uploaded_image:
+        with st.spinner("正在进行 OCR 识别..."):
+            ocr_result, method = perform_ocr(uploaded_image)
+            if ocr_result:
+                st.success(f"OCR 识别成功 (方法: {method})")
+                st.text_area("识别结果", ocr_result, height=100)
+                ocr_text = ocr_result
+            else:
+                st.error("OCR 识别失败，请检查配置或网络")
 
 with col2:
     st.subheader("🔎 分析设置")
     time_window = st.slider("上下文时间窗口 (秒)", 10, 120, 30)
-    max_context_lines = st.slider("最大上下文行数", 50, 1000, 200)
+    max_context_lines = st.slider("最大上下文行数", 50, 2000, 500)
 
     analyze_btn = st.button("🚀 开始智能分析", type="primary", use_container_width=True)
 
@@ -322,7 +344,6 @@ if analyze_btn and uploaded_file and user_query:
     if not openai.api_key:
         st.error("请先在侧边栏输入 DeepSeek API Key")
     else:
-        # 合并OCR结果到问题描述
         full_query = user_query
         if ocr_text:
             full_query = f"{user_query}\n\n[图片OCR识别内容]\n{ocr_text}"
@@ -340,7 +361,6 @@ if analyze_btn and uploaded_file and user_query:
                 context_lines = [log_lines_all[i] for i in relevant_indices]
                 log_snippet = "\n".join(context_lines)
 
-                # 显示发送给AI的数据量
                 st.info(f"📊 已提取相关日志行数: {len(context_lines)}，总字符数: {len(log_snippet)}")
 
                 highlighted = []
@@ -355,7 +375,6 @@ if analyze_btn and uploaded_file and user_query:
                 with st.expander("查看高亮日志", expanded=True):
                     st.markdown(f"<pre>{log_highlight_html}</pre>", unsafe_allow_html=True)
 
-                # 相似案例检索
                 similar_text = ""
                 vectorizer, vectors, metadata = load_vectorizer_and_vectors()
                 if vectorizer and len(metadata) > 0:
@@ -372,13 +391,14 @@ if analyze_btn and uploaded_file and user_query:
                 st.session_state.analysis = analysis_result
                 st.session_state.log_highlight = log_highlight_html.replace("<br>", "\n")
 
-                # 截图导出
                 st.divider()
                 st.subheader("📸 导出报告")
+
                 screenshot_html = render_screenshot_content(
                     analysis_result,
                     st.session_state.log_highlight
                 )
+
                 st.components.v1.html(f"""
                 <html>
                 <head>
@@ -404,7 +424,6 @@ if analyze_btn and uploaded_file and user_query:
                 </html>
                 """, height=80)
 
-                # 解决方案反馈
                 st.divider()
                 st.subheader("📝 提交解决方案 (帮助 AI 学习)")
                 user_solution = st.text_area("如果问题已解决，请分享您的解决方案...")
