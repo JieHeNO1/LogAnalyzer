@@ -4,6 +4,7 @@ python-dotenv
 scikit-learn
 pillow
 requests
+httpx
+chardet
 pytesseract
 opencv-python-headless
-chardet

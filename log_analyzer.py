@@ -181,38 +181,54 @@ def parse_log_line(line, line_num):
     return None
 
 def find_relevant_context(log_lines, query, time_window_sec=30):
-    # 优先提取错误码
+    """
+    增强版上下文检索：
+    1. 优先使用用户输入的原始关键词（空格分割）。
+    2. 若无明确关键词，则智能提取错误码和中英文词。
+    3. 时间戳解析失败时返回更多上下文（100行）。
+    """
+    # 原始关键词：用户输入中以空格分隔的词语
+    raw_keywords = [kw for kw in query.split() if len(kw) >= 2]
+    # 智能提取的错误码和单词
     error_codes = re.findall(r'SSW_0x[0-9a-fA-F]+|\b[A-Z]+_\d+\b', query)
-    # 提取中英文单词
     words = re.findall(r'[\u4e00-\u9fff]{2,}|[a-zA-Z]{3,}', query)
-    keywords = list(set(error_codes + words))
-    if not keywords:
-        keywords = query.split()
+    smart_keywords = list(set(error_codes + words))
+    
+    # 优先使用原始关键词，若没有则使用智能关键词
+    if raw_keywords:
+        keywords = raw_keywords
+    else:
+        keywords = smart_keywords if smart_keywords else query.split()
     
     matched_indices = []
     for i, line in enumerate(log_lines):
         line_lower = line.lower()
         if any(kw.lower() in line_lower for kw in keywords):
             matched_indices.append(i)
+    
     if not matched_indices:
         return []
 
     first_match = min(matched_indices)
     parsed_first = parse_log_line(log_lines[first_match], first_match)
+    
+    # 若时间戳解析失败，返回匹配行前后各100行（原来20行可能不够）
     if not parsed_first or not isinstance(parsed_first["timestamp"], datetime):
-        start = max(0, first_match - 20)
-        end = min(len(log_lines), first_match + 20)
+        start = max(0, first_match - 100)
+        end = min(len(log_lines), first_match + 100)
         return list(range(start, end))
 
     target_ts = parsed_first["timestamp"]
     start_idx = first_match
     end_idx = first_match
+    
     for i in range(first_match - 1, -1, -1):
         parsed = parse_log_line(log_lines[i], i)
         if parsed and isinstance(parsed["timestamp"], datetime):
             if (target_ts - parsed["timestamp"]).total_seconds() > time_window_sec:
                 break
         start_idx = i
+        
     for i in range(first_match + 1, len(log_lines)):
         parsed = parse_log_line(log_lines[i], i)
         if parsed and isinstance(parsed["timestamp"], datetime):
