@@ -10,6 +10,7 @@ from pathlib import Path
 from io import BytesIO
 from PIL import Image
 from dotenv import load_dotenv
+import chardet
 
 import openai
 import numpy as np
@@ -296,33 +297,19 @@ col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("📂 上传日志文件")
-    uploaded_file = st.file_uploader("选择 .log 或 .txt 文件 (支持大文件)", type=["log", "txt"])
+    uploaded_file = st.file_uploader("选择 .log 或 .txt 文件 (支持大文件/ANSI编码)", type=["log", "txt"])
 
     if uploaded_file:
-        # 流式读取文件内容（避免内存溢出）
-        log_content = uploaded_file.read().decode("utf-8", errors="ignore")
+        raw_data = uploaded_file.read()
+        # 自动检测编码
+        result = chardet.detect(raw_data)
+        encoding = result['encoding'] if result['encoding'] else 'gbk'
+        st.caption(f"检测到文件编码: {encoding}")
+        log_content = raw_data.decode(encoding, errors='ignore')
         log_lines = log_content.splitlines()
         st.success(f"已加载 {len(log_lines)} 行日志")
-
         with st.expander("📄 日志预览 (前100行)"):
             st.text("\n".join(log_lines[:100]))
-
-    st.subheader("❓ 问题描述")
-    user_query = st.text_area("请描述问题，例如：'10:08左右频率校正信噪比异常' 或 '报错 SSW_0x00000070'",
-                             height=100)
-
-    st.subheader("🖼️ 图片上传 (可选，用于OCR识别)")
-    uploaded_image = st.file_uploader("支持 PNG / JPG / JPEG", type=["png", "jpg", "jpeg"])
-    ocr_text = ""
-    if uploaded_image:
-        with st.spinner("正在进行 OCR 识别..."):
-            ocr_result, method = perform_ocr(uploaded_image)
-            if ocr_result:
-                st.success(f"OCR 识别成功 (方法: {method})")
-                st.text_area("识别结果", ocr_result, height=100)
-                ocr_text = ocr_result
-            else:
-                st.error("OCR 识别失败，请检查配置或网络")
 
 with col2:
     st.subheader("🔎 分析设置")
