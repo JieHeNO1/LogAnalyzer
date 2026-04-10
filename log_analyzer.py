@@ -180,63 +180,36 @@ def parse_log_line(line, line_num):
         }
     return None
 
-def find_relevant_context(log_lines, query, time_window_sec=30):
+def find_relevant_context(log_lines, query, context_lines=80):
     """
-    增强版上下文检索：
-    1. 优先使用用户输入的原始关键词（空格分割）。
-    2. 若无明确关键词，则智能提取错误码和中英文词。
-    3. 时间戳解析失败时返回更多上下文（100行）。
+    全量上下文检索：
+    1. 用用户输入的完整字符串作为关键词（不再拆分）。
+    2. 找出所有匹配行。
+    3. 对每个匹配行提取前后 context_lines 行。
+    4. 合并所有区间，去重后按行号排序返回。
     """
-    # 原始关键词：用户输入中以空格分隔的词语
-    raw_keywords = [kw for kw in query.split() if len(kw) >= 2]
-    # 智能提取的错误码和单词
-    error_codes = re.findall(r'SSW_0x[0-9a-fA-F]+|\b[A-Z]+_\d+\b', query)
-    words = re.findall(r'[\u4e00-\u9fff]{2,}|[a-zA-Z]{3,}', query)
-    smart_keywords = list(set(error_codes + words))
-    
-    # 优先使用原始关键词，若没有则使用智能关键词
-    if raw_keywords:
-        keywords = raw_keywords
-    else:
-        keywords = smart_keywords if smart_keywords else query.split()
-    
+    keyword = query.strip()
+    if not keyword:
+        return []
+
     matched_indices = []
+    keyword_lower = keyword.lower()
     for i, line in enumerate(log_lines):
-        line_lower = line.lower()
-        if any(kw.lower() in line_lower for kw in keywords):
+        if keyword_lower in line.lower():
             matched_indices.append(i)
-    
+
     if not matched_indices:
         return []
 
-    first_match = min(matched_indices)
-    parsed_first = parse_log_line(log_lines[first_match], first_match)
-    
-    # 若时间戳解析失败，返回匹配行前后各100行（原来20行可能不够）
-    if not parsed_first or not isinstance(parsed_first["timestamp"], datetime):
-        start = max(0, first_match - 100)
-        end = min(len(log_lines), first_match + 100)
-        return list(range(start, end))
+    # 收集所有需要包含的行号（用集合去重）
+    included_lines = set()
+    for idx in matched_indices:
+        start = max(0, idx - context_lines)
+        end = min(len(log_lines), idx + context_lines + 1)
+        included_lines.update(range(start, end))
 
-    target_ts = parsed_first["timestamp"]
-    start_idx = first_match
-    end_idx = first_match
-    
-    for i in range(first_match - 1, -1, -1):
-        parsed = parse_log_line(log_lines[i], i)
-        if parsed and isinstance(parsed["timestamp"], datetime):
-            if (target_ts - parsed["timestamp"]).total_seconds() > time_window_sec:
-                break
-        start_idx = i
-        
-    for i in range(first_match + 1, len(log_lines)):
-        parsed = parse_log_line(log_lines[i], i)
-        if parsed and isinstance(parsed["timestamp"], datetime):
-            if (parsed["timestamp"] - target_ts).total_seconds() > time_window_sec:
-                break
-        end_idx = i
-
-    return list(range(start_idx, end_idx + 1))
+    # 排序返回
+    return sorted(included_lines)
 
 def generate_analysis(log_snippet, user_query, similar_cases=""):
     """调用 DeepSeek 生成分析报告（支持代理）"""
