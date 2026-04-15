@@ -1,0 +1,2 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+1(0x00000001)	扫描停止，线圈发生故障	Scan aborted, Coil happen fault	Error	No	Yes	线圈故障	发送到远程平台上

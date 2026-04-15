@@ -1,0 +1,36 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+1001(0x000003E9)	检测到床右侧急停开关已被按下,使用前先释放急停开关	The emergency stop button on the right side of the couch is detected as pressed. Release the emergency stop button before use.	Error	No	Yes	急停开关1按下	检查急停按钮是否被按下,如按下请释放，如没按下检查急停开关及相关线缆是否有损坏
+1002(0x000003EA)	检测到床左侧急停开关已被按下,使用前先释放急停开关	The emergency stop button on the left side of the couch is detected as pressed. Release the emergency stop button before use.	Error	No	Yes	急停开关2按下	检查急停按钮是否被按下,如按下请释放，如没按下检查急停开关及相关线缆是否有损坏
+1003(0x000003EB)	检测到Intercom急停开关按下,使用前先释放急停开关	The Intercom emergency stop button is detected as pressed. Release the emergency stop button before use.	Error	No	Yes	急停开关3按下	检查急停按钮是否被按下,如按下请释放，如没按下检查急停开关及相关线缆是否有损坏
+1004(0x000003EC)	请按压急停按钮，然后松开急停按钮，等待3秒钟，再操作控制面板上的home键，如已恢复请关闭此报错窗口并继续使用，如未恢复请联系服务工程师	Press  and  release the emergency stop button . Wait for 3 seconds, then operating the couch via the control panel . If it has recovered, close this error window and resume use; if not, please contact the service engineer.	Error	No	Yes	垂直高位开关和Home开关都没触发，水平开关和垂直开关互锁	"1.检查 UP 或者 HOME 开关本体及接插头是否松脱以及相关连线是否磨损
+2.检查床控盒端接插件垂直x421  水平x409是否牢固
+3.检查水平home位微动开关插头状态"
+1005(0x000003ED)	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	电池电源低	"1.检查电池状态及安装是否松动
+2.若电量不足，请更换电池"
+1006(0x000003EE)	病床不在HOME点，请按下控制面板的HOME键，进行病床初始化操作。如果病床仍无法工作，请联系服务工程师。	Please press the HOME key of the control panel to initialize the patient table. if not, please contact the service engineer.	Warning	Yes	No	病床没有执行寻0操作	"1.检查床板是否脱离床架，如无，请检查home开关是否异常
+2.操作home开关，观察床是否运动，如不运动，交换操作左右控制面板，同时监听水平电机是否有声音，如有声音，判断离合器故障，检查离合器，如无，ufm或者床控系统有故障
+3.检查床控线缆是否存在松脱、破损、断裂。"
+1007(0x000003EF)	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	Home Swicth未触发，病床触发机械限位，	检查Home Swicth及其线缆，如无异常，请检查床控系统
+1008(0x000003F0)	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	编码器没有反馈	检查拉绳编码器或离合器，如无异常请检查床控系统
+1009(0x000003F1)	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	编码器旋转方向与床运动方向相反	检查拉绳编码器和床控系统
+1010(0x000003F2)	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	水平开关错误, 请确认开关状态	检查水平限位开关（远近端）、检查床控盒相关DB接头水平x409是否脱开
+1011(0x000003F3）	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	垂直开关错误, 请确认开关状态	检查垂直限位开关（高低位）、检查床控盒相关DB接头垂直x421是否脱开
+1012(0x000003F4）	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	伺服驱动错误,,重新上电,请确认伺服状态	"1.检查伺服屏蔽盒线缆
+2.检查伺服器是否正常
+"
+1013(0x000003F5）	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	垂直过载错误,关闭床控电源系统,重新上电,请确认垂直状态	"1.检查电动推杆
+2.检查垂直开关
+3.检查床控盒"
+1014(0x000003F6）	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	Yes	Yes	编码器精度设置范围超限值	编码器精度设置范围超限值,重启上位机软件设置参数,请确认参数范围
+1015(0x000003F7）	病床内部错误，请联系服务工程师	Couch error. Please contact the service engineer.	Error	No	Yes	病床类型与配置不同	检查病床类型
+1101(0x0000044D)	病床不在垂直最高位, 请按下控制面板的HOME键，进行病床初始化操作。如果病床仍无法工作，请联系服务工程师。	Patient table is not in the highest position.Please press the HOME key of the control panel to initialize the patient table. if not, please contact the service engineer.	Warning	Yes	No	病床不在垂直最高位置	"1.检查床控线缆垂直限位开关和线缆是否存在松脱、破损、断裂。
+2.检查垂直推杆"
+1107(0x00000453）	病床通讯失败，请联系服务工程师	No response to command. please contact the service engineer.	Error	No	Yes	病床命令无应答	"1.系统重新上下电
+2.检查病床通讯链路（包括hub、床控盒）
+"
+1108(0x00000454）	病床开始运动超时，请重启系统，如仍未解决，请联系服务工程师	Start movement timeout. Please restart the system. If the problem is not resolved, contact the service engineer.	Error	No	Yes	病床开始运动超时	"1.系统重新上下电
+2.检查床控盒
+"
+1109(0x00000455）	病床结束运动超时，请重启系统，如仍未解决，请联系服务工程师	End movement timeout. Please restart the system. If the problem is not resolved, contact the service engineer.	Error	No	Yes	病床结束运动超时	"1.系统重新上下电
+2.检查床控盒
+"

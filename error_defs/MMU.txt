@@ -1,0 +1,39 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+1（0x00000001）	压缩机运行状态告警，请确认系统状态，若问题未能解决请联系服务工程师	Compressor drive run status alarm, check system status,or contact the service engineer.	Error	No	Yes	压缩机运行状态告警	"1.关闭压缩机远程控制功能以检测是否为磁体DPS开关动作导致压缩机停机
+2.检测磁体到压缩机链路是否断开
+3.按照压缩机服务手册进行排查检修"
+2（0x00000002）	压缩机温度报警，请确认系统状态，若问题未能解决请联系服务工程师	Compressor temperature alarm, check system status,or contact the service engineer.	Warning	No	Yes	压缩机温度报警	"1.检测压缩机和压缩机供水水冷机以及连接管路
+2.按照压缩机服务手册进行排查检修"
+3（0x00000003）	压缩机压力报警，请确认系统状态，若问题未能解决请联系服务工程师	Compressor pressure alarm, check system status,or contact the service engineer.	Warning	No	Yes	压缩机压力报警	1.按照压缩机服务手册进行排查检修
+4（0x00000004）	加热功率过高时间过长，请确认系统状态，若问题未能解决请联系服务工程师	Bath heater above upper limit, check system status,or contact the service engineer.	Warning	No	Yes	加热功率过高时间过长	"1.检测磁体是否存在泄露状况（管路结冰
+霜，液氦位下降）"
+5（0x00000005）	加热功率过低时间过长，请确认系统状态，若问题未能解决请联系服务工程师	Bath heater below lower limit, check system status,or contact the service engineer.	Warning	No	Yes	加热功率过低时间过长	1.检测磁体冷头冷量是否过小
+6（0x00000006）	磁体差压过高，请确认系统状态，若问题未能解决请联系服务工程师	Pressure above upper limit, check system status,or contact the service engineer.	Warning	No	Yes	磁体差压过高	"1.检测冷头，压缩机等设备是否正产工作
+2.查询MMU加热功率状态是否与磁体压力状态情况一致"
+7(0x00000007)	磁体差压过低，请确认系统状态，若问题未能解决请联系服务工程师	Pressure below lower limit, check system status,or contact the service engineer.	Warning	No	Yes	磁体差压过低	"1.检测MMU供电指示灯是否正常闪烁
+2.检测磁体是否存在泄露状况（管路结冰霜，液氦位下降）
+3.查询通讯协议，使用指令#RPSP磁体控制压力是否设置过低
+4.磁体失超，加液氦，除冰等操作后需要一点时间恢复，期间可能出现低压情况"
+8(0x00000008)	磁场状态关闭，请确认系统状态，若问题未能解决请联系服务工程师	Magnetic field sensor, check system status,or contact the service engineer.	Error	No	Yes	磁场状态关闭	"1.检测MMU磁场传感器是否正常工作
+2.检测确认磁场是否消失，是否失超，如确认，需重新励磁调试"
+9(0x00000009)	ERDU状态激活报警，请确认系统状态，若问题未能解决请联系服务工程师	ERDU actuated, check system status,or contact the service engineer.	Error	No	Yes	ERDU状态激活报警	"1.检测确认磁场是否消失，是否失超，如
+确认，需重新励磁调试"
+10(0x0000000A)	ERDU线缆串口互锁状态报警，请确认系统状态，若问题未能解决请联系服务工程师	ERDU cable alarm, check system status,or contact the service engineer.	Error	No	Yes	ERDU线缆串口互锁状态报警	"1.检测MMU相关线缆是否断开来接或接触不良
+2.检测磁体ERDU失超按键是否连接或是否触发"
+11(0x0000000B)	磁体命令执行失败，请确认系统状态，若问题未能解决请联系服务工程师	COMMAND FAILED, check system status,or contact the service engineer.	Error	No	Yes	磁体命令执行失败	"1.检测MMU供电指示灯是否正常闪烁以及上位机运行状态
+2.检测光纤线缆是否有折损"
+12(0x0000000C)	液氦液位过低报警，请确认系统状态，若问题未能解决请联系服务工程师	Helevel Warning, check system status,or contact the service engineer.	Warning	No	Yes	液氦液位低于告警位55%	1.尽快补充液氦
+13(0x0000000D)	液氦液位过低错误，请确认系统状态，若问题未能解决请联系服务工程师	Helevel Fault, check system status,or contact the service engineer.	Error	No	Yes	液氦液位低于50%	1.需立即补充液氦
+14(0x0000000E)	电池状态测试未通过，请确认系统状态，若问题未能解决请联系服务工程师	Battery test failed, check system status,or contact the service engineer.	Warning	No	Yes	电池状态测试未通过	1.更换ERDU备用电池
+15(0x0000000F)	低电流状态测试未通过，请确认系统状态，若问题未能解决请联系服务工程师	Low current voltage test failed,check system status,or contact the service engineer.	Error	No	Yes	低电流状态测试未通过	"1.检测ERDU失超开关是否正确连接
+2.检测MMU相关线缆是否正确连接"
+16(0x00000010)	DPS开关错误，请确认系统状态，若问题未能解决请联系服务工程师	DPS switch error, check system status,or contact the service engineer.	Error	No	Yes	DPS开关错误	"1.观察磁体压力是否过低
+2.检测MMU相关线缆是否正确连接
+3.检测磁体是否存在泄露状况（管路结冰霜，液氦位下降）
+4.磁体失超，加液氦，除冰等操作后需要一点时间恢复，期间可能出现低压情况"
+17(0x00000011)	4K 温度报警，请确认系统状态，若问题未能解决请联系服务工程师	Magnet 4k temperature alarm	Warning	No	Yes	4K 温度报警	1.联系研发工程师
+18(0x00000012)	50K 温度报警，请确认系统状态，若问题未能解决请联系服务工程师	Magnet 50k temperature alarm	Warning	No	Yes	50K 温度报警	1.联系研发工程师
+19(0x00000013)	液氦高度信息提示	HE Level information prompt	Info	No	Yes		
+20(0x00000014)	当前压差压力	Current differential pressure	Info	No	Yes		
+21(0x00000015)	关闭压缩机冷头失败，请确认系统状态，若问题未能解决请联系服务工程师	Close compressor cold head failed, check system status, or contact the service engineer.	Warning	No	Yes	关闭压缩机冷头失败报警	1.联系研发工程师
+22(0x00000016)	打开压缩机冷头失败，请确认系统状态，若问题未能解决请联系服务工程师	Open compressor cold head failed, check system status, or contact the service engineer.	Warning	No	Yes	打开压缩机冷头失败报警	1.联系研发工程师

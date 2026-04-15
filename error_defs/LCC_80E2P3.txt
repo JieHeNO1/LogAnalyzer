@@ -1,0 +1,74 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+0x30000001	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	水泵过载（ 热继）	"1.电网电压不稳，电压恢复后，机组下电重启；
+2.水泵故障，联系供应商更换水泵；"
+0x30000004	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	二次供水压力传感器故障	"1.拧松压力传感器SP5螺母，压力传感器探头拔出，清洁之后重新安装；
+2.压力传感器SP5故障，联系供应商寄送新的压力传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000005	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GC回水流量探头故障	"1.GC流量温度传感器故障，联系供应商寄送新的流量温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000006	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GC回水温度探头故障	"1.GC流量温度传感器故障，联系供应商寄送新的流量温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000007	LCC缺水报警，打开柜门，用螺丝刀松掉水箱上部盖板螺钉，取下盖板，将冷却水倒入水箱直至液位浮标高于绿色水位线	LCC low water alarm. Open the cabinet door, use a screwdriver to loosen the screws on the upper cover plate of the water tank, remove the cover plate, and pour cooling water into the water tank until the liquid level float is above the green line	Warning	No	Yes	水箱液位低报警	LCC缺水，打开柜们，用螺丝刀松掉水箱上部盖板螺钉，取下盖板，将冷却水倒入水箱直至液位浮标高于绿色水位线
+0x30000008	LCC缺水故障，打开柜门，用螺丝刀松掉水箱上部盖板螺钉，取下盖板，将冷却水倒入水箱直至液位浮标高于绿色水位线	LCC low water fault. Open the cabinet door, use a screwdriver to loosen the screws on the upper cover plate of the water tank, remove the cover plate, and pour cooling water into the water tank until the liquid level float is above the green line	Error	No	Yes	水箱液位过低报错	LCC缺水，打开柜门，用螺丝刀松掉水箱上部盖板螺钉，取下盖板，将冷却水倒入水箱直至液位浮标高于绿色水位线
+0x30000009	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GA回水流量探头故障	"1.GA流量温度传感器故障，联系供应商寄送新的流量温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x3000000A	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	1#系统高压报警	请清洗室外机，如问题不能解决联系供应商维修
+0x3000000B	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	1#系统低压报警	请联系供应商,补充制冷剂
+0x3000000C	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	1#压缩机过载报警	1#压缩机故障，请联系供应商维护
+0x3000000D	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	2#系统高压报警	请清洗室外机，如问题不能解决联系供应商维修
+0x3000000E	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	2#系统低压报警	请联系供应商,补充制冷剂
+0x3000000F	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	2#压缩机过载报警	2#压缩机故障，请联系供应商维护
+0x30000010	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	GC回水水流量过低报警	"1.GC流量温度传感器故障，联系供应商寄送新的流量温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000011	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	pCOe1离线	联系供应商寄送新的PCOe1卡，并更换
+0x30000012	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	pCOe2离线	联系供应商寄送新的PCOe2卡，并更换
+0x30000013	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	RF供水压力传感器故障	"1.拧松压力传感器SP7螺母，压力传感器探头清洁拔出，之后重新安装；
+2.压力传感器SP7故障，联系供应商寄送新的压力传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000014	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GA供水压力传感器故障	"1.拧松压力传感器SP6螺母，压力传感器探头清洁拔出，之后重新安装；
+2.压力传感器SP6故障，联系供应商寄送新的压力传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000015	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GC供水压力传感器故障	"1.拧松压力传感器SP8螺母，压力传感器探头清洁拔出，之后重新安装；
+2.压力传感器SP8故障，联系供应商寄送新的压力传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000016	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	二次水系统流量低	检查LCC水泵是否正常工作，否则联系供应商寄送新水泵，并更换；
+0x30000017	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	二次供水温度超高报警	检查LCC面板给水温度是否正常，否则联系供应商维护；
+0x3000001A	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	二次供水温度高报警	检查LCC面板给水温度是否正常，否则联系供应商维护；
+0x3000001B	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	二次供水温度低报警	检查LCC面板给水温度是否正常，否则联系供应商维护；
+0x3000001D	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	RF回水温度探头故障	"1.RF流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x3000001E	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	HC回水温度探头故障	"1.HC回水温度传感器ST5故障，联系供应商寄送新的温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x3000001F	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GA回水温度探头故障	"1.GA流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000020	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GC回水温度过高报警	"1.检查LCC面板给水温度是否正常，否则联系供应商维护；
+2.GC流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000021	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GA回水温度过高报警	"1.检查LCC面板给水温度是否正常，否则联系供应商维护；
+2.GA流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000023	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	GA回水水流量过低报警	"1.GC流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000024	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	RF回水温度过高报警	"1.检查LCC面板给水温度是否正常，否则联系供应商维护；
+2.RF流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000026	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	RF回水水流量过低报警	"1.RF流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000027	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	HC回水温度过高报警	"1.检查LCC面板给水温度是否正常，否则联系供应商维护；
+2.HC回水温度传感器ST5故障，联系供应商寄送新的温度传感器，并更换；
+3.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000029	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	RF回水流量探头故障	"1.RF流量温度传感器故障，联系供应商寄送新的温度传感器，并更换；
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x3000002B	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GC出水压力高报警	"1.调节GC调节阀，降低压力；
+2.GC供水压力传感器故障，联系供应商寄送新的压力传感器，并更换；"
+0x3000002C	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	GA出水压力高报警	"1.调节GA调节阀，降低压力；
+2.GA供水压力传感器故障，联系供应商寄送新的压力传感器，并更换；"
+0x3000002D	LCC报警，请联系服务工程师	LCC alarm, please contact the service engineer	Warning	No	Yes	RF出水压力高报警	"1.调节RF调节阀，降低压力；
+2.RF供水压力传感器故障，联系供应商寄送新的压力传感器，并更换；"
+0x30000041	LCC通讯故障，请联系服务工程师	LCC communication fault, please contact the service engineer	Error	No	Yes	超时或者连接断开	"1.检查LCC顶部通信电缆X163及其接头是否故障，并维护通讯线缆
+2.控制器故障，联系供应商寄送新的控制器，并更换；"
+0x30000065	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	报警关闭	检查LCC机组状态，LCC面板按报警键查询具体Error，然后按照对应的Error处理
+0x30000069	LCC故障，请检查LCC是否开机，如没有开机，按照LCC面板的提示对LCC开机	LCC fault, please check if the LCC is turned on. If not, follow the prompts on the LCC panel to turn on the LCC	Error	No	Yes	键盘关闭	检查LCC机组是否开机，如没有开机，按照LCC面板的提示对LCC开机
+0x3000006B	LCC待机状态，上位机发送“Stand by off”指令，启动LCC	LCC is in standby mode. Please send the “Stand by off ”command on the upper computer to start LCC	Warning	No	Yes	机组待机	检查LCC机组状态，上位机发送Stand by off指令，启动LCC
+0x3000006C	LCC故障，请联系服务工程师	LCC fault, please contact the service engineer	Error	No	Yes	控制器通信错误	控制器故障，联系供应商寄送新的控制器，并更换；
+0x30000080	温湿度异常！系统下电，LCC下电，请及时检查精密空调，手动切换LCC顶部氦压缩机路自来水阀	Abnormal temperature and humidity! Power off the system and LCC, please check the air conditioner，and switch the water valve of the helium compressor circuit on the top of the LCC	Error	No	Yes	手动切换自来水阀	手动切换自来水阀，待精密空调恢复后，再切换到LCC

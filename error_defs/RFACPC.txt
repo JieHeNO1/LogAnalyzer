@@ -1,0 +1,29 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+256(0x00000100)	CPC RFA占空比报错，请调整序列参数，如未解决联系服务	CPC RFA Occupancy false alarm, please adjust sequence parameters. If the issue persists, contact service.	Error	Yes	Yes	CPC RFA占空比报错，请调整序列参数	"1.调整序列参数
+2.重启系统
+3.系统重新上下电"
+257(0x00000101)	CPC RFA电源错误，请重启系统尝试恢复，如未解决联系服务	CPC RFA Power error, please restart the system and try to recover. If the issue persists, contact service.	Error	Yes	Yes	CPC RFA电源错误，请重启系统尝试恢复	"1.重启系统
+2.系统重新上下电"
+258(0x00000102)	CPC RFA VSWR错误，请重启系统尝试恢复，如未解决联系服务	CPC RFA VSWF error, please restart the system and try to recover. If the issue persists, contact service.	Error	Yes	Yes	CPC RFA VSWR错误，请重启系统尝试恢复	"1.重启系统
+2.系统重新上下电"
+259(0x00000103)	CPC RFA脉宽错误，请调整序列参数，如未解决联系服务	CPC RFA Overload error, please adjust sequence parameters. If the issue persists, contact service.	Error	Yes	Yes	CPC RFA 脉宽错误，请调整序列参数	"1.调整序列参数
+2.重启系统
+3.系统重新上下电"
+260(0x00000104)	CPC RFA过热，请重启系统尝试恢复，如未解决联系服务	CPC RFA Overheat, please restart the system and try to recover. If the issue persists, contact service.	Error	Yes	Yes	CPC RFA过热，请重启系统尝试恢复	"1.检查机柜散热
+2.重启系统
+3.系统重新上下电"
+261(0x00000105)	CPC RFA能量报错，请重启系统尝试恢复，如未解决联系服务	CPC RFA Energy error, please restart the system and try to recover. If the issue persists, contact service.	Error	Yes	Yes	CPC RFA能量报错，请重启系统尝试恢复	"1.重启系统
+2.系统重新上下电"
+262(0x00000106)	CPC RFA超驰错误，请重启系统尝试恢复，如未解决联系服务	CPC RFA Overspeed error, please restart the system and try to recover. If the issue persists, contact service.	Error	Yes	Yes	CPC RFA超驰错误，请重启系统尝试恢复	"1.重启系统
+2.系统重新上下电"
+264(0x00000108)	CPC RFA状态异常, 重启系统，如未解决，请联系服务工程师	CPC RFA Status error, please restart the system and try to recover. If the issue persists, contact service.	Error	NO	Yes	"一：AC ON 指示灯不亮
+1）No LED lit on “3-phase monitor”
+a：AC power 没输入
+b: 内部保险丝熔断
+2) Red LED lit on “3-phase monitor”
+a：AC power 连接不对
+b：AC 电压值不对
+3）Yellow LED lit on “3-phase monitor”
+软件启动故障"	"1、查看AC on指示灯是否异常
+2、如果异常，检查RFA的开关是否闭合；检测RFA电源输入是否有380V
+3、如果有380V电，AC ON是正常，先等待10秒后，重启RFA，如果未解决，再检查RFA和XTU两端的控制线是否松动"

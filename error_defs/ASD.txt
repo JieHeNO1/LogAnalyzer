@@ -1,0 +1,15 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+2(0x00000002)	当前烟雾浓度达到预警阈值，请暂停使用系统，并马上去扫描间确认情况，若问题未能解决请联系服务工程师	Smoke density has reached the alert threshold. Please stop using the system immediately and go to the scaning room to check the situation. If the problem cannot be resolved, contact the service engineer.	Warning	No	Yes	ASD预警	当前烟雾浓度达到预警阈值，请暂停使用系统，并马上去扫描间确认情况
+3(0x00000003)	当前烟雾浓度达到行动阈值，请暂停使用系统，并马上去扫描间确认情况，若问题未能解决请联系服务工程师	Smoke density has reached the action threshold. Please stop using the system immediately and go to the scaning room to check the situation. If the problem cannot be resolved, contact the service engineer.	Warning	No	Yes	ASD行动报警	当前烟雾浓度达到行动阈值，请暂停使用系统，并马上去扫描间确认情况
+4(0x00000004)	当前烟雾浓度达到火警1阈值，请暂停使用系统，并马上去扫描间确认情况，若问题未能解决请联系服务工程师	Smoke density has reached the fire1 threshold. Please stop using the system immediately and go to the scaning room to check the situation. If the problem cannot be resolved, contact the service engineer.	Error	No	Yes	ASD火警1	当前烟雾浓度达到火警1阈值，请暂停使用系统，并马上去扫描间确认情况
+5(0x00000005)	当前烟雾浓度达到火警2阈值，请暂停使用系统，并马上去扫描间确认情况，若问题未能解决请联系服务工程师	Smoke density has reached the fire2 threshold. Please stop using the system immediately and go to the scaning room to check the situation. If the problem cannot be resolved, contact the service engineer.	Error	No	Yes	ASD火警2	当前烟雾浓度达到火警2阈值，请暂停使用系统，并马上去扫描间确认情况
+6(0x00000006)	请联系服务工程师排查故障	Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	过滤器寿命到期	过滤器寿命到期，请更换过滤器
+7(0x00000007)	请联系服务工程师排查故障	Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	抽气泵故障	抽气泵故障，请更换抽气泵
+8(0x00000008)	请联系服务工程师排查故障	Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	气流过高故障	气流过高故障，请联系供应商维修
+9(0x00000009)	请联系服务工程师排查故障	Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	气流过低故障	气流过低故障，请联系供应商维修
+10(0x0000000A)	请联系服务工程师排查故障	Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	电源供电故障	电源供电故障，请更换电源
+11(0x0000000B)	请联系服务工程师更换网卡	Please contact the service engineer to replace the network card.	Warning	No	Yes	网卡故障	网卡故障，请更换网卡
+12(0x0000000C)	GPI接线或网卡接线失败，请联系服务工程师排查故障	GPI wiring or network card wiring failed. Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	GPI接线或网卡接线失败	GPI接线或网卡接线失败，请联系供应商维修
+13(0x0000000D)	自动学习烟雾或气流失败，请联系服务工程师排查故障	Automatic learning of smoke or airflow failed. Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	自动学习烟雾或气流失败	自动学习烟雾或气流失败，请联系供应商维修
+14(0x0000000E)	探测器故障，请联系服务工程师排查故障	Detector fault. Please contact the service engineer to troubleshoot the fault.	Warning	No	Yes	探测器故障	探测器故障，请更换探测器
+15(0x0000000F)	ASD通信错误，请检查系统连接状态，重启系统，若问题未能解决请联系服务工程师	ASD communication error. Please check the system connection status and restart the system. If the problem cannot be resolved, contact the service engineer.	Error	No	Yes	ASD通信错误	ASD通信错误，请检查系统连接状态，重启系统，若问题未能解决请联系供应商维修

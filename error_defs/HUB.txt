@@ -1,0 +1,3 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+1(0x00000001)	HUB通讯错误，请检查网络连接后再次尝试，若问题未能解决请重启系统或联系服务工程师	HUB Communication error. Please check network connection and try again.If the problem is not solved, please restart the system or contact the service engineer	Error	Yes	Yes	HUB连接断开	检查HOST与HUB连接线缆,重启系统
+2(0x00000002)	HUB通讯错误，请检查网络连接后再次尝试，若问题未能解决请重启系统或联系服务工程师	HUB Communication error. Please check network connection and try again.If the problem is not solved, please restart the system or contact the service engineer	Warning	No	Yes	HUB通讯错误	检查HOST与HUB连接线缆,重启系统

@@ -1,0 +1,136 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施	Unnamed: 8
+0001(0x00000001)	应用程序异常，请重启系统，若问题未能解决请联系服务工程师	Console application shutdown abnormally	Warning	Yes	Yes	重启应用程序,联系系统服务人员	查看系统Dump文件	
+0002(0x00000002)	服务程序异常，请重启系统，若问题未能解决请联系服务工程师	Filed service application shutdown abnormally	Warning	Yes	Yes	重启应用程序,联系系统服务人员	查看系统Dump文件	
+3(0x00000003)	系统内存不足，请再次尝试，若问题未能解决请重启系统	Memory overflow. Try again or restart software to recover	Warning	Yes	Yes	内存不足	等待几分钟后再次尝试，若未解决则联系系统服务人员	
+4(0x00000004)	系统内存趋势异常警告	Memory exception. Try again or restart software to recover	Warning	Yes	Yes	内存增长异常	等待几分钟后再次尝试，若未解决则联系系统服务人员	
+5(0x00000005)	硬盘余量不足警告，请清理硬盘空间	Disk usage overflow warning. Please clear up disk space.	Warning	Yes	No	磁盘空间余量不足警告	清理磁盘空间，若未解决则联系系统服务人员	
+6(0x00000006)	硬盘余量不足错误，请清理硬盘空间，若问题未能解决请联系服务工程师	Disk usage overflow warning. Please clear up disk space or contact the service engineer.	Error	Yes	Yes	磁盘空间余量不足错误	清理磁盘空间，若未解决则联系系统服务人员	
+7(0x00000007)	工作流逻辑错误，请再次尝试，若问题未能解决请重启系统	Application logic error. Restart software system or contact the service engineer.	Warning	Yes	Yes	程序逻辑异常	重启应用程序	
+8(0x00000008)	序列逻辑错误，请调整参数再次尝试，若问题未能解决请联系服务工程师	Sequence logic error. Check scan parameters and try again or contact the service engineer.	Warning	Yes	Yes	序列参数或逻辑异常	请调整参数再次尝试，若问题未能解决请联系系统服务人员	
+9(0x00000009)	可用系统内存不足，请再次尝试，若问题未能解决请重启系统	Insufficient memory. Try again or restart software to recover	Error	Yes	Yes	内存不足	等待几分钟后再次尝试，若未解决则联系系统服务人员	需求已删除，该错误码废弃
+10(0x0000000A)	所需系统端口被占用，请再次尝试，若问题未能解决请重启系统	Specified port already in Use. Try again or restart host PC to recover	Error	Yes	Yes	系统端口占用	再次尝试，若未解决则重启HOST主机	
+101(0x00000065)	信噪比过低导致扫描失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	SNR abnormal. Check system state and try again  or contact the service engineer.	Error	Yes	Yes	信噪比过低	确认系统状态再次尝试，若未解决则联系系统服务人员	
+102(0x00000066)	开机预校正失败，请重启系统，若问题未能解决请联系服务工程师	Startup calibration error. Restart the system or contact the service engineer.	Warning	Yes	Yes	开机预校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+103(0x00000067)	中心频率预校正失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	F0 calibration error. Check system state and try again or contact the service engineer.	Warning	Yes	Yes	中心频率校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+104(0x00000068)	射频电压预校正失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	TxGain calibration error. Check system state and try again or contact the service engineer.	Warning	Yes	Yes	射频电压预校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+105(0x00000069)	匀场预校正失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	Shimming calibration error. Check system state and try again or contact the service engineer.	Warning	Yes	Yes	匀场预校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+106(0x0000006A)	射频功率一致性预校正失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	RF power consistency check calibration error. Check system state and try again or contact the service engineer.	Warning	Yes	Yes	射频功率一致性预校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+107(0x0000006B)	波谱中心频率预校正失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	MRS F0 calibration error. Check system state and try again or contact the service engineer.	Warning	Yes	Yes	波谱中心频率预校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+108(0x0000006C)	抑水中心频率预校正失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	WET F0 calibration error. Check system state and try again or contact the service engineer.	Warning	Yes	Yes	抑水中心频率预校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+109(0x0000006D)	抑水射频电压预校正失败，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	WET TxGain calibration error. Check system state and try again or contact the service engineer.	Warning	Yes	No	抑水射频电压预校正失败	确认系统状态再次尝试，若未解决则联系系统服务人员	
+110(0x0000006E)	发射相位监控异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	MTX phase monitor exception.  Check system state and try again or contact the service engineer.	Warning	Yes	No	发射相位监控异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+111(0x0000006F)	PU监控异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师	PU monitor exception.  Check system state and try again or contact the service engineer.	Warning	Yes	No	PU监控异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+112(0x00000070)	频率校正信噪比异常，请确认定位或者匀场框位置后再次尝试，若问题未能解决请联系服务工程师。	The SNR of frequency correction is abnormal. Please confirm the mark alignment or the position of the shimming box and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	频率校正信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+113(0x00000071)	频率校正数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of frequency correction is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	频率校正数据异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+114(0x00000072)	匀场校正信噪比异常，请确认定位或者匀场框位置后再次尝试，若问题未能解决请联系服务工程师。	The SNR of shimming correction is abnormal. Please confirm the mark alignment or the position of the shimming box and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	匀场校正信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+115(0x00000073)	匀场校正数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of shimming correction is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	匀场校正信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+116(0x00000074)	电压校正信噪比异常，请确认定位后再次尝试，若问题未能解决请联系服务工程师。	The SNR of txgain correction is abnormal. Please confirm the mark alignment and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	电压校正信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+117(0x00000075)	电压校正数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of txgain correction is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	电压校正数据异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+118(0x00000076)	射频功率一致性检测数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of RFPCC is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	射频功率一致性检测数据异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+119(0x00000077)	射频功率一致性检测信噪比异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The SNR of RFPCC is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	射频功率一致性检测信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+120(0x00000078)	开机校正数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of SUPC is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	开机校正数据异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+121(0x00000079)	开机校正信噪比异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The SNR of SUPC is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	开机校正信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+122(0x0000007A)	多通道相位监控数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of MTxP is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	多通道相位监控数据异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+123(0x0000007B)	多通道相位监控信噪比异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The SNR of MTxP is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	多通道相位监控信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+124(0x0000007C)	PU监控数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of PU is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	PU监控数据异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+125(0x0000007D)	PU监控信噪比异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The SNR of PU is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	PU监控信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+126(0x0000007E)	ERU校正数据异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The data of ERUC is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	ERU校正数据异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+127(0x0000007F)	ERU校正信噪比异常，请确认系统状态后再次尝试，若问题未能解决请联系服务工程师。	The SNR of ERUC is abnormal. Please confirm the system status and try again. If the problem persists, please contact the service engineer.	Error	Yes	Yes	ERU校正信噪比异常	确认系统状态再次尝试，若未解决则联系系统服务人员	
+201(0x000000C9)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	Yes	Yes	采集设备未就绪	检查谱仪设备板卡是否被正确枚举，重启系统，若未解决则联系系统服务人员	
+202(0x000000CA)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	Yes	Yes	序列采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+203(0x000000CB)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+204(0x000000CC)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+205(0x000000CD)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+206(0x000000CE)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+207(0x000000CF)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+208(0x000000D0)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+301(0x0000012D)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪软件逻辑错误	重启系统，若未解决则联系系统服务人员	
+302(0x0000012E)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪软件逻辑错误	重启系统，若未解决则联系系统服务人员	
+303(0x0000012F)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+304(0x00000130)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+305(0x00000131)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	No	Yes	梯度时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+306(0x00000132)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	No	Yes	射频时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+307(0x00000133)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	No	Yes	门控时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+308(0x00000134)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	No	Yes	梯度电流采集时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+309(0x00000135)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectromter error. Restart the system or contact the service engineer.	Error	No	Yes	Sync时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+310(0x00000136)	梯度幅度超限，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Gradient amplitude overflow. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	梯度幅度超限	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+311(0x00000137)	梯度爬升率超限，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Gradien slewrate overflow . Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	梯度爬升率超限	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+312(0x00000138)	射频前置时间错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	RF leading timing error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	射频前置时间错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+313(0x00000139)	射频幅度错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	RF amplitude error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	射频幅度错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+314(0x0000013A)	射频时序错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	RF timing error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	RF-RF时间间隔过短	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+315(0x0000013B)	序列时序错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Sequence timing error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列时序错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+316(0x0000013C)	扫描参数错误，检查更正参数并重新扫描，若问题未能解决请联系服务工程师	Scan parameter error. Check scan parameters and try again  or contact the service engineer.	Error	Yes	Yes	序列控制参数错误	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+317(0x0000013D)	生理信号丢失, 检查门控连接状态，若问题未能解决请联系服务工程师	"Physiological signal lost. Check the status of gated connection or contact the
+service engineer."	Error	Yes	Yes	生理信号丢失	生理信号丢失，请检查门控连接状态	
+401(0x00000191)	谱仪启动失败，重启系统，若问题未能解决请联系服务工程师	Spectrometer fails to start. Restart the system. If the problem persists, please contact a service engineer.  	Error	No	Yes	SCU启动失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+402(0x00000192)	谱仪设备配置文件错误，检查系统配置	There is an error in the spectrometer device configuration file. Check the system configuration.  	Error	No	Yes	SCU设备配置文件错误	确认软件安装状态，重启系统，若未解决则联系系统服务人员	
+403(0x00000193)	谱仪设备错误，重启系统，若问题未能解决请联系服务工程师	Spectrometer device error. Restart the system. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+404(0x00000194)	谱仪设备错误，重启系统，若问题未能解决请联系服务工程师	Spectrometer device error. Restart the system. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+405(0x00000195)	谱仪设备错误，检查设备连接，若问题未能解决请联系服务工程师	Spectrometer device error. Check the device connection. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+406(0x00000196)	谱仪设备注册错误，检查系统配置，若问题未能解决请联系服务工程师	Spectrometer device registration error. Check the system configuration. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+407(0x00000197)	谱仪设备错误，检查Host板卡，若问题未能解决请联系服务工程师	Spectrometer device error. Check the Host board. If the problem persists, please contact a service engineer.  	Error	No	Yes	HOST主机失联	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+408(0x00000198)	谱仪设备错误，重启系统，若问题未能解决请联系服务工程师	Spectrometer device error. Restart the system. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪逻辑错误	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+409(0x00000199)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectrometer error. Restart the system. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪link校准失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+410(0x0000019A)	谱仪错误，重启系统，若问题未能解决请联系服务工程师	Spectrometer error. Restart the system. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+411(0x0000019B)	谱仪软件错误，检查系统配置，若问题未能解决请联系服务工程师	Spectrometer software error. Check the system configuration. If the problem persists, please contact a service engineer.  	Error	Yes	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+412(0x0000019C)	谱仪软件错误，检查系统配置，若问题未能解决请联系服务工程师	Spectrometer software error. Check the system configuration. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+413(0x0000019D)	谱仪软件错误，检查系统配置，若问题未能解决请联系服务工程师	Spectrometer software error. Check the system configuration. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+414(0x0000019E)	谱仪软件错误，检查系统配置，若问题未能解决请联系服务工程师	Spectrometer software error. Check the system configuration. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+415(0x0000019F)	谱仪软件错误，检查系统配置，若问题未能解决请联系服务工程师	Spectrometer software error. Check the system configuration. If the problem persists, please contact a service engineer.  	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+416(0x000001A0)	谱仪软件错误，检查系统配置，若问题未能解决请联系服务工程师	Spectrometer software error. Check the system configuration. If the problem persists, please contact a service engineer.	Error	No	Yes	谱仪初始化失败	"1.确认系统状态; 
+2.检查系统配置; 
+3.检查SCU配置;重启系统，若未解决则联系系统服务人员"	
+417(0x000001A1)	谱仪通信错误，重启系统，若问题未能解决请联系服务工程师	Spectromter communication error. Restart the system or contact the service engineer.	Error	Yes	Yes	谱仪通信失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+418(0x000001A2)	谱仪GA设备初始化失败，重启系统，若问题未能解决请联系服务工程师	Spectromter GA init error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪GA设备初始化失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+419(0x000001A3)	谱仪RFCU设备初始化失败，重启系统，若问题未能解决请联系服务工程师	Spectromter RFCU init error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪RFCU设备初始化失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+420(0x000001A4)	谱仪接收设备初始化失败，重启系统，若问题未能解决请联系服务工程师	Spectromter Receiver init error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪接收设备初始化失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+421(0x000001A5)	谱仪DTU设备初始化失败，重启系统，若问题未能解决请联系服务工程师	Spectromter DTU init error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪DTU设备初始化失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+422(0x000001A6)	谱仪PCIE设备初始化失败，重启系统，若问题未能解决请联系服务工程师	Spectromter PCIE init error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪PCIE设备初始化失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+423(0x000001A7)	谱仪Router设备初始化失败，重启系统，若问题未能解决请联系服务工程师	Spectromter Router init error. Restart the system or contact the service engineer.	Error	No	Yes	谱仪Router设备初始化失败	确认系统状态，重启系统，若未解决则联系系统服务人员	
+501(0x000001F5)	采集数据包异常，请确认系统状态后再次尝试，若问题未能解决请重启系统	Acquisition package abnormal. Check system state and try again, or restart the system.	Error	Yes	Yes	HOST采集数据包异常	确认HOST光纤卡连接后再次尝试，若未解决则重启系统	
+502(0x000001F6)	数据采集卡异常，请确认系统状态后再次尝试，若问题未能解决请重启系统	Acquisition card abnormal. Check system state and try again, or restart the system.	Error	Yes	Yes	HOST光纤采集卡异常	确认HOST光纤PCIe卡连接后再次尝试，若未解决则重启系统	
+503(0x000001F7)	重建进程异常，请确认系统状态后再次尝试，若问题未能解决请注销系统重新登录	recon process abnormal. Check system state and try again, or log offf and log in again	Error	Yes	Yes	重建进程状态异常	再次尝试，若未解决则注销windows后重新登录	
+601(0x00000259)	梯度功放型号配置错误	Gradient amplifier type configuraiton error. Check and update system configuration.	Error	Yes	Yes	梯度功放型号配置错误	通过服务配置工具确认并更新梯度功放型号，并重启软件	
+602(0x0000025A)	磁体型号配置错误	Magnet type configuraiton error. Check and update system configuration.	Error	Yes	Yes	磁体型号配置错误	通过服务配置工具确认并更新磁体型号，并重启软件	
+603(0x0000025B)	射频功放型号配置错误	RF amplifier type configuraiton error. Check and update system configuration.	Error	Yes	Yes	射频功放型号配置错误	通过服务配置工具确认并更新射频功放型号，并重启软件	
+604(0x0000025C)	病床型号配置错误	Couch type configuraiton error. Check and update system configuration.	Error	Yes	Yes	病床型号配置错误	通过服务配置工具确认并更新病床型号，并重启软件	
+605(0x0000025D)	水冷型号配置错误	LCC type configuraiton error. Check and update system configuration.	Error	Yes	Yes	水冷型号配置错误	通过服务配置工具确认并更新水冷型号，并重启软件	
+606(0x0000025E)	MRBox型号配置错误	MRBox type configuraiton error. Check and update system configuration.	Error	Yes	Yes	MRBox型号配置错误	通过服务配置工具确认并更新MRBox型号，并重启软件	
+607(0x0000025F)	风冷型号配置错误	ACS type configuraiton error. Check and update system configuration.	Error	Yes	Yes	风冷型号配置错误	通过服务配置工具确认并更新风冷型号，并重启软件	
+608(0x00000260)	高阶匀场配置错误或者通信错误	HOS type configuraiton error or HOS communication error.Check and update system configuration.	Error	Yes	Yes	高阶匀场配置错误或者通信错误	"1、通过服务配置工具确认并更新高阶匀场型号，并重启软件
+2、检查连接通信电缆"	
+609(0x00000261)	门控型号配置错误	Physio type configuraiton error. Check and update system configuration.	Error	Yes	Yes	门控型号配置错误	"1、通过服务配置工具确认并更新门控型号，并重启软件
+2、检查门控接收盒与配置型号是否匹配"	
+610(0x00000262)	接收通道数型号配置错误	Coil type configuraiton error. Check and update system configuration.	Error	Yes	Yes	接收通道数型号配置错误	通过服务配置工具确认并更新接收通道数型号，并重启软件	
+611(0x00000263)	谱仪型号配置错误	Spectrometer type configuraiton error. Check and update system configuration.	Error	Yes	Yes	谱仪型号配置错误	通过服务配置工具确认并更新谱仪型号，并重启软件	
+652(0x0000028C)	系统组件授权失败，请联系系统服务人员确认系统配置	System component authorization faiiled. Contact system service personnel to confirmsystem configuration	Warning	Yes	No	系统组件授权失败	联系服务人员进行相关系统组件替换	
+700(0x000002BC)	序列执行失败	Sequence Execute Error. Check parameter and retry	Error	Yes	Yes	序列执行失败	调整序列参数，再次尝试，若未解决则联系系统服务人员	
+701(0x000002BD)	序列执行中断	Sequence Execute interrupted. Check system state	Error	Yes	Yes	序列执行中断	确认系统状态，若未解决则联系系统服务人员	
+702(0x000002BE)	序列执行超时	Sequence Execute timeout. Check system state	Error	Yes	Yes	序列执行超时	调整序列参数，确认系统状态，再次尝试，若未解决则联系系统服务人员	
+703(0x000002BF)	系统扫描线圈故障, 请重新插拔线圈，若问题未能解决请联系服务工程师	System Coil Malfunction, replugin coils, if problem not resolved, please contact the service engineer.	Error	Yes	No	系统扫描线圈故障	重新插拔线圈，若未解决，请联系系统服务人员查看线圈连接状态或者进行线圈置换。	

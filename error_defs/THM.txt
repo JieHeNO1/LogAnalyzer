@@ -1,0 +1,13 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+1(0x00000001)	设备间温湿度监控通信警告，请检查系统连接状态	THM communication warning. Please check system status.	Warning	No	Yes	设备间温湿度监控通信警告	检查HUB和THM连接状态，若未解决则联系系统服务人员
+2(0x00000002)	设备间温湿度监控通信错误，请检查系统连接状态，重启系统，若问题未能解决请联系服务工程师	THM communication error. Restart the system or contact the service engineer.	Error	No	Yes	设备间温湿度监控通信错误	检查HUB和THM连接状态，若未解决则联系系统服务人员
+3(0x00000003)	设备间温度过低错误，请检查设备间设备状态，重启系统，若问题未能解决请联系服务工程师	Device room temperature too low error. Check status of devices, and restart the system or contact the service engineer.	Error	No	Yes	设备间温度过低错误	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+4(0x00000004)	设备间温度过低警告，请检查设备间设备状态	Device room temperature too low warning. Check status of devices.	Warning	No	Yes	设备间温度过低警告	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+5(0x00000005)	设备间温度过高警告，请检查设备间设备状态	Device room temperature too high warning. Check status of devices.	Warning	No	Yes	设备间温度过高警告	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+6(0x00000006)	设备间温度过高错误，请检查设备间设备状态，重启系统，若问题未能解决请联系服务工程师	Device room temperature too high error. Check status of devices, and restart the system or contact the service engineer.	Error	No	Yes	设备间温度过高错误	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+7(0x00000007)	设备间湿度过低错误，请检查设备间设备状态，重启系统，若问题未能解决请联系服务工程师	Device room humidity too low error. Check status of devices, and restart the system or contact the service engineer.	Error	No	Yes	设备间湿度过低错误	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+8(0x00000008)	设备间湿度过低警告，请检查设备间设备状态	Device room humidity too low warning. Check status of devices.	Warning	No	Yes	设备间湿度过低警告	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+9(0x00000009)	设备间湿度过高警告，请检查设备间设备状态	Device room humidity too high warning. Check status of devices.	Warning	No	Yes	设备间湿度过高警告	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+10(0x0000000A)	设备间湿度过高错误，请检查设备间设备状态，重启系统，若问题未能解决请联系服务工程师	Device room humidity too high error. Check status of devices, and restart the system or contact the service engineer.	Error	No	Yes	设备间湿度过高错误	检查设备间设备运行状态，重启系统，若未解决则联系系统服务人员
+12(0x0000000C)	设备间温度信息提示	Device room temperature prompt	Info	No	Yes		
+13(0x0000000D)	设备间湿度信息提示	Device room humidity prompt	Info	No	Yes		

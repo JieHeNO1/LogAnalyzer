@@ -1,0 +1,3 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+1(0x00000001)	HOS状态灯错误，重启HOS，若问题未能解决请联系服务工程师	HOS status lamp error. Restart the HOS or contact the service engineer	Error	No	Yes	HOS状态灯异常报警	检查HOS状态灯状态，重启系统，若未解决则联系系统服务人员
+2(0x00000002)	HOS通信错误，重启HOS，若问题未能解决请联系服务工程师	HOS communication error. Restart the system or contact the service engineer	Error	No	Yes	HOS通信异常报警	检查HUB和HOS连接状态，若未解决则联系系统服务人员

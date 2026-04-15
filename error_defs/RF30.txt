@@ -1,0 +1,45 @@
+﻿Code	用户提示信息（医生、技师）	英文	Severity	Software Recoverable	上传至远程平台	服务提示报错信息	服务提示解决措施
+0003(0x00000003)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	通信失败；软件重启，若错误仍存在，请联系服务工程师	"1.检查RFA前面板指示灯，若指示灯灭，确认断路器是否打开和RFA处于上电状态
+2.检查RFA串口通信电缆，以及检测HuB通信是否正常"
+00C9(0x000000C9)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	前向峰值功率过高；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中，下发PEAKPWR? ,读取前向功率是否超阈值，向RFA发送RESET指令，重复操作检查告警是否还在，若是，需要检查系统设置和放大器硬件
+2.在系统通讯工具中，下发IMAXP=?，若读取输入功率过大（大于1dBm），检查发射链路loop6/VSWR测试，判断射频链路是否正常
+3.更换RFA"
+00CA(0x000000CA)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	反向峰值功率过高；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中，下发RMAXH=?命令，查询反射功率是否超阈值，向RFA发送RESET指令，重复操作检查告警是否还在，若是，需要检查系统设置和放大器硬件 
+2.在系统诊断工具中，运行loop6和VSWR测试项，定位射频链路异常点位置。
+3.检查射频链路射频线缆是否由打火痕迹或者接头松动
+4.更换RFA
+"
+00CB(0x000000CB)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	前向平均功率过高；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中向RFA发送RESET指令，重复操作检查告警是否还在，若是，需要检查系统设置和放大器硬件 
+2.在系统诊断工具中，运行loop6和VSWR测试项，定位射频链路异常点位置。
+3.检查射频链路射频线缆是否由打火痕迹或者接头松动
+4.更换RFA"
+00CC(0x000000CC)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	反向平均功率过高；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中向RFA发送RESET指令，重复操作检查告警是否还在，若是，需要检查系统设置和放大器硬件 
+2.在系统诊断工具中，运行loop6和VSWR测试项，定位射频链路异常点位置。
+3.检查射频链路射频线缆是否由打火痕迹或者接头松动
+"
+00CD(0x000000CD)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	输入功率过高；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中发送命令IMAXP=?，检查输入功率是否接近或者超过3dbm。
+2.向RFA发送RESET指令，重复操作检查告警是否还在，若是，需要检查系统设置和放大器硬件
+3.在系统诊断工具中，运行loop6和VSWR测试项，定位射频链路异常点位置。
+4.检查射频链路射频线缆是否由打火痕迹或者接头松动"
+00CE(0x000000CE)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	增益异常告警；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中发送命令GAIN=?,检查当前增益值是否超过阈值
+2.向RFA发送RESET指令，重复操作检查告警是否还在。
+3.检查RFA输入输出线缆是否松动或者打火；在系统诊断工具中，运行loop6，判断各链路节点的幅值是否正常
+4.更换RFA"
+00D0(0x000000D0)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	Unblank使能时间过长告警；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中发送命令UBMAX=?,检查扫描时长是否超过阈值（250ms)
+2.检查系统扫描时长的设置是否超出范围"
+00D1(0x000000D1)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	大功率模块电流告警；软件重启，若错误仍存在，请联系服务工程师	"1.在系统通讯工具中发送RESET指令，重复操作检查错误是否还在，
+2.更换RFA备件"
+00D2(0x000000D2)	RFA温度告警；查询水冷系统的温度和流量是否正常	RFA temperature alarm; Check temperature and flow rate	Error		Yes	水冷板温度告警；软件重启，若错误仍存在，请联系服务工程师	"1.查询水冷系统的温度和流量是否正常
+2.在系统通讯工具中发送TCOLD1=?，查询温度值；再发RESET指令，重复操作检查告警是否还在.
+3.更换RFA备件"
+00D3(0x000000D3)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Fatal		Yes	大功率模块FUSE熔断告警；软件重启，若错误仍存在，请联系服务工程师	1.在系统通讯工具中发送RESET命令，重复操作检查告警是否还在，若是，需要替换RFA
+00D4(0x000000D4)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	PSU告警-高压异常；软件重启，若错误仍存在，请联系服务工程师	"1.RFA重新上电，重复操作检查告警是否还在，
+2.检查RFA的三相电电压是否正常，若电压正常，需替换RFA"
+00D5(0x000000D5)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	PSU告警-电流异常；软件重启，若错误仍存在，请联系服务工程师	"1.RFA重新上电，重复操作检查告警是否还在，
+2.检查RFA的三相电电压是否正常，若电压正常，需替换RFA"
+00D6(0x000000D6)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	PSU告警-温度异常；软件重启，若错误仍存在，请联系服务工程师	"1.RFA重新上电，重复操作检查告警是否还在，
+2.检查RFA的三相电电压是否正常，若电压正常，需替换RFA"
+00D7(0x000000D7)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	PSU告警-风扇异常；软件重启，若错误仍存在，请联系服务工程师	"1.RFA重新上电，重复操作检查告警是否还在，
+2.检查RFA的三相电电压是否正常，若电压正常，需替换RFA"
+00D8(0x000000D8)	RFA告警；系统重启，若错误仍存在，请联系服务工程师	RFA alarm; Restart System, If the error still persists,  please contact the service engineer	Error		Yes	PSU告警-通信异常；软件重启，若错误仍存在，请联系服务工程师	"1.RFA重新上电，重复操作检查告警是否还在，
+2.检查RFA的三相电电压是否正常，若电压正常，需替换RFA"
