@@ -47,12 +47,79 @@ VECTORIZER_FILE = Path("vectorizer.pkl")
 VECTORS_FILE = Path("vectors.npy")
 METADATA_FILE = Path("metadata.json")
 
+# 错误码定义目录
+ERROR_DEFS_DIR = Path("./error_defs")
+
 # 尝试导入 pytesseract（备用 OCR）
 try:
     import pytesseract
     TESSERACT_AVAILABLE = True
 except ImportError:
     TESSERACT_AVAILABLE = False
+
+# ==================== 错误码定义加载 ====================
+
+@st.cache_resource
+def load_error_definitions():
+    """
+    加载 ./error_defs 目录下所有 .txt 文件，解析错误码定义。
+    返回字典: { "0x00000070": { "component": "SCU", "user_msg": "...", "service_msg": "...", "severity": "Error", ... } }
+    """
+    error_db = {}
+    if not ERROR_DEFS_DIR.exists():
+        st.warning(f"错误码定义目录不存在: {ERROR_DEFS_DIR}")
+        return error_db
+
+    txt_files = list(ERROR_DEFS_DIR.glob("*.txt"))
+    if not txt_files:
+        st.warning(f"错误码定义目录中没有 .txt 文件: {ERROR_DEFS_DIR}")
+        return error_db
+
+    for filepath in txt_files:
+        component = filepath.stem  # 文件名作为组件名，如 SCU, ASD
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            if not lines:
+                continue
+
+            # 解析TSV格式（制表符分隔）
+            # 第一行通常是表头，我们跳过，从第二行开始解析
+            for line in lines[1:]:
+                line = line.strip()
+                if not line:
+                    continue
+                parts = line.split('\t')
+                if len(parts) < 8:
+                    continue
+                code_raw = parts[0].strip()
+                # 提取十六进制错误码，如 "2(0x00000002)" -> "0x00000002"
+                match = re.search(r'(0x[0-9a-fA-F]+)', code_raw)
+                if not match:
+                    continue
+                code_hex = match.group(1).lower()  # 统一小写便于匹配
+                user_msg_cn = parts[1].strip()
+                user_msg_en = parts[2].strip()
+                severity = parts[3].strip()
+                recoverable = parts[4].strip()
+                upload = parts[5].strip()
+                service_msg = parts[6].strip()
+                service_action = parts[7].strip()
+
+                error_db[code_hex] = {
+                    "component": component,
+                    "code": code_hex,
+                    "user_msg_cn": user_msg_cn,
+                    "user_msg_en": user_msg_en,
+                    "severity": severity,
+                    "recoverable": recoverable,
+                    "service_msg": service_msg,
+                    "service_action": service_action,
+                }
+        except Exception as e:
+            st.warning(f"解析错误码文件失败 {filepath}: {e}")
+
+    return error_db
 
 # ==================== 知识库管理 ====================
 
@@ -207,8 +274,31 @@ def find_relevant_context(log_lines, query, context_lines=80):
 
     return sorted(included), len(matched_indices)
 
-def generate_analysis(log_snippet, user_query, similar_cases=""):
-    """调用 DeepSeek 生成分析报告（支持代理）"""
+def extract_error_codes_from_text(text):
+    """从文本中提取十六进制错误码，如 0x00000070"""
+    pattern = r'0x[0-9a-fA-F]{8}'
+    matches = re.findall(pattern, text.lower())
+    return list(set(matches))
+
+def generate_analysis(log_snippet, user_query, similar_cases="", error_defs=None):
+    """调用 DeepSeek 生成分析报告，并注入错误码定义"""
+    # 提取日志片段中的错误码
+    error_codes = extract_error_codes_from_text(log_snippet)
+    error_context = ""
+    if error_defs and error_codes:
+        error_context = "\n【相关错误码官方定义】\n"
+        for code in error_codes:
+            if code in error_defs:
+                defn = error_defs[code]
+                error_context += f"- 错误码 {code} (组件: {defn['component']}):\n"
+                error_context += f"  用户提示: {defn['user_msg_cn']}\n"
+                error_context += f"  严重程度: {defn['severity']}\n"
+                error_context += f"  服务提示: {defn['service_msg']}\n"
+                error_context += f"  解决措施: {defn['service_action']}\n"
+            else:
+                error_context += f"- 错误码 {code}: 未在定义库中找到对应说明。\n"
+        error_context += "\n"
+
     prompt = f"""
 你是一名资深的MRI系统软件和硬件日志分析专家。请根据以下日志片段（按时间顺序排列）和用户的问题描述，进行详细的原因分析。
 
@@ -217,15 +307,15 @@ def generate_analysis(log_snippet, user_query, similar_cases=""):
 
 【相关日志片段】
 {log_snippet}
-
+{error_context}
 【历史相似案例参考】
 {similar_cases if similar_cases else "无"}
 
 【分析要求】
-1. **错误直接原因**：明确指出报错代码或现象对应的直接失败点。
+1. **错误直接原因**：明确指出报错代码或现象对应的直接失败点。如果有官方错误码定义，请优先参考。
 2. **故障链追溯**：按时间顺序描述错误发生前的关键状态变化。
 3. **潜在根本原因**：基于日志和领域知识，列出3个最可能的根本原因，并解释推断依据。
-4. **排查建议**：提供具体、可操作的后续排查步骤。
+4. **排查建议**：提供具体、可操作的后续排查步骤，可结合官方解决措施。
 
 请以清晰的结构化Markdown格式输出。
 """
@@ -266,6 +356,10 @@ def render_screenshot_content(analysis_md, log_highlight):
     """
 
 # ==================== Streamlit 界面 ====================
+
+# 加载错误码定义
+error_definitions = load_error_definitions()
+st.sidebar.markdown(f"📚 已加载 {len(error_definitions)} 条错误码定义")
 
 with st.sidebar:
     st.header("⚙️ 配置")
@@ -353,6 +447,20 @@ if analyze_btn and uploaded_file and user_query:
                 context_lines = [log_lines[i] for i in relevant_indices]
                 log_snippet = "\n".join(context_lines)
 
+                # 提取错误码并在界面上显示定义（可选）
+                extracted_codes = extract_error_codes_from_text(log_snippet)
+                if extracted_codes and error_definitions:
+                    with st.expander("📋 检测到的错误码及官方定义"):
+                        for code in extracted_codes:
+                            if code in error_definitions:
+                                defn = error_definitions[code]
+                                st.markdown(f"**{code}** (组件: {defn['component']})")
+                                st.caption(f"用户提示: {defn['user_msg_cn']}")
+                                st.caption(f"服务提示: {defn['service_msg']}")
+                                st.caption(f"解决措施: {defn['service_action']}")
+                            else:
+                                st.markdown(f"**{code}** - 未找到定义")
+
                 highlighted = []
                 for line in context_lines:
                     if user_query.lower() in line.lower():
@@ -373,7 +481,7 @@ if analyze_btn and uploaded_file and user_query:
                         similar_text = "\n".join([f"- {sol}" for sol in solutions])
 
                 with st.spinner("🤖 AI 正在深度分析..."):
-                    analysis_result = generate_analysis(log_snippet, full_query, similar_text)
+                    analysis_result = generate_analysis(log_snippet, full_query, similar_text, error_definitions)
 
                 st.subheader("📊 分析报告")
                 st.markdown(analysis_result)
@@ -438,4 +546,4 @@ else:
     st.info("👆 请上传日志文件并输入问题描述（建议直接输入错误代码如 SSW_0x00000070），然后点击「开始智能分析」")
 
 st.divider()
-st.caption("Powered by Streamlit + DeepSeek + DashScope OCR + scikit-learn")
+st.caption("Powered by Streamlit + DeepSeek + DashScope OCR + scikit-learn + 错误码定义库")
