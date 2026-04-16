@@ -12,4 +12,5 @@ __pycache__/
 *.pyc
 
 # Streamlit 缓存
-.streamlit/
+.streamlit/"__pycache__/" 
+"*.pyc" 
