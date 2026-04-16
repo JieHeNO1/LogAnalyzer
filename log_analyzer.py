@@ -1,3 +1,9 @@
+"""
+智能日志分析助手 (集成错误码知识库 + AI 诊断)
+支持从自然语言中提取部件错误标识（如 SSW_0x00000070），
+自动匹配本地错误码定义文件，并提供 AI 增强分析建议。
+"""
+
 import streamlit as st
 import re
 import os
@@ -49,7 +55,7 @@ VECTORIZER_FILE = Path("vectorizer.pkl")
 VECTORS_FILE = Path("vectors.npy")
 METADATA_FILE = Path("metadata.json")
 
-# 错误码定义文件目录（存放 ACS_80E2P3.txt 等文件）
+# 错误码定义文件目录
 ERROR_DEFS_DIR = Path("./error_defs")
 
 # 尝试导入 pytesseract（备用 OCR）
@@ -59,12 +65,13 @@ try:
 except ImportError:
     TESSERACT_AVAILABLE = False
 
-# ==================== 错误码知识库（来自之前的实现） ====================
+# ==================== 错误码知识库（修复 code 解析） ====================
 
 @dataclass
 class ErrorCodeEntry:
     """单个错误码条目"""
-    code: str
+    code: str                # 原始 Code 列内容，如 "112(0x00000070)"
+    code_hex: str            # 提取的纯十六进制错误码，如 "0x00000070"
     user_prompt_cn: str
     user_prompt_en: str
     severity: str
@@ -85,6 +92,7 @@ class ComponentErrorCodeManager:
 
     def __init__(self, definitions_dir: str):
         self.definitions_dir = definitions_dir
+        # 数据结构：{component_full_name: {error_code_hex: ErrorCodeEntry}}
         self.db: Dict[str, Dict[str, ErrorCodeEntry]] = {}
         self._load_all_files()
 
@@ -99,6 +107,14 @@ class ComponentErrorCodeManager:
             return False
         return value.strip().lower() == 'yes'
 
+    def _extract_hex_code(self, code_raw: str) -> str:
+        """从原始 Code 列中提取纯十六进制错误码，如 '112(0x00000070)' -> '0x00000070'"""
+        match = re.search(r'(0x[0-9A-Fa-f]+)', code_raw)
+        if match:
+            return match.group(1)
+        # 如果没有括号，则返回原始值（可能本身就是十六进制）
+        return code_raw.strip()
+
     def _parse_file(self, filepath: str, component_full_name: str) -> List[ErrorCodeEntry]:
         entries = []
         try:
@@ -109,18 +125,22 @@ class ComponentErrorCodeManager:
                 lines = f.readlines()
         if not lines:
             return entries
+
         header_line = lines[0].strip()
         if header_line.startswith('\ufeff'):
             header_line = header_line[1:]
+
         headers = header_line.split('\t')
         headers = [h.strip() for h in headers]
         col_map = {name.lower(): idx for idx, name in enumerate(headers)}
+
         required_lower = ['code', '用户提示信息（医生、技师）', '英文',
                           'severity', 'software recoverable', '上传至远程平台',
                           '服务提示报错信息', '服务提示解决措施']
         for col_lower in required_lower:
             if col_lower not in col_map:
                 raise ValueError(f"缺少必要列: {col_lower}")
+
         for line in lines[1:]:
             line = line.strip()
             if not line:
@@ -128,9 +148,13 @@ class ComponentErrorCodeManager:
             parts = line.split('\t')
             while len(parts) < len(headers):
                 parts.append('')
-            code = parts[col_map['code']].strip()
-            if not code:
+
+            code_raw = parts[col_map['code']].strip()
+            if not code_raw:
                 continue
+
+            code_hex = self._extract_hex_code(code_raw)
+
             user_prompt_cn = parts[col_map['用户提示信息（医生、技师）']].strip()
             user_prompt_en = parts[col_map['英文']].strip()
             severity = parts[col_map['severity']].strip()
@@ -138,13 +162,20 @@ class ComponentErrorCodeManager:
             upload_remote = self._parse_bool_field(parts[col_map['上传至远程平台']])
             service_info = parts[col_map['服务提示报错信息']].strip()
             service_solution = parts[col_map['服务提示解决措施']].strip()
+
             entry = ErrorCodeEntry(
-                code=code, user_prompt_cn=user_prompt_cn, user_prompt_en=user_prompt_en,
-                severity=severity, software_recoverable=sw_recoverable,
-                upload_to_remote=upload_remote, service_error_info=service_info,
+                code=code_raw,
+                code_hex=code_hex,
+                user_prompt_cn=user_prompt_cn,
+                user_prompt_en=user_prompt_en,
+                severity=severity,
+                software_recoverable=sw_recoverable,
+                upload_to_remote=upload_remote,
+                service_error_info=service_info,
                 service_solution=service_solution
             )
             entries.append(entry)
+
         return entries
 
     def _load_all_files(self):
@@ -162,21 +193,38 @@ class ComponentErrorCodeManager:
                 if component_full not in self.db:
                     self.db[component_full] = {}
                 for entry in entries:
-                    self.db[component_full][entry.code] = entry
+                    # 使用提取的十六进制码作为键（兼容查询）
+                    self.db[component_full][entry.code_hex] = entry
+                    # 同时保留原始 code 的映射（如果不同的话）
+                    if entry.code != entry.code_hex:
+                        self.db[component_full][entry.code] = entry
             except ValueError:
                 pass  # 非错误码定义文件，静默跳过
             except Exception as e:
                 print(f"警告: 解析文件 {filename} 失败: {e}")
 
     def query_by_abbreviation(self, abbr: str, error_code: str) -> Optional[ErrorCodeEntry]:
+        """根据部件缩写和错误码查询（支持纯十六进制或原始格式）"""
         full_name = self.ABBREVIATION_MAP.get(abbr.upper())
         if not full_name:
             return None
+        # 尝试直接匹配全称
         if full_name in self.db:
-            return self.db[full_name].get(error_code)
+            # 优先用输入的 error_code 直接查询（可能是 "0x00000070" 或 "112(0x00000070)"）
+            if error_code in self.db[full_name]:
+                return self.db[full_name][error_code]
+            # 尝试规范化：提取十六进制部分再查一次
+            hex_code = self._extract_hex_code(error_code)
+            if hex_code in self.db[full_name]:
+                return self.db[full_name][hex_code]
+        # 忽略大小写再试一次
         for comp, entries in self.db.items():
             if comp.lower() == full_name.lower():
-                return entries.get(error_code)
+                if error_code in entries:
+                    return entries[error_code]
+                hex_code = self._extract_hex_code(error_code)
+                if hex_code in entries:
+                    return entries[hex_code]
         return None
 
     def get_all_components(self) -> List[str]:
@@ -204,7 +252,7 @@ class ErrorDiagnosisAssistant:
             results.append((abbr, code, entry))
         return results
 
-# 初始化错误码管理器
+# 初始化错误码管理器（缓存）
 @st.cache_resource
 def init_error_manager():
     return ComponentErrorCodeManager(str(ERROR_DEFS_DIR))
@@ -341,10 +389,13 @@ def parse_log_line(line, line_num):
 def find_relevant_context(log_lines, query, context_lines=80):
     if not query or not query.strip():
         return [], 0
-    keyword = query.strip().lower()
+    # 将查询按空格拆分，支持多关键词 OR 匹配（更宽松）
+    keywords = query.strip().lower().split()
     matched_indices = []
     for i, line in enumerate(log_lines):
-        if keyword in line.lower():
+        line_lower = line.lower()
+        # 只要包含任意一个关键词即认为匹配
+        if any(kw in line_lower for kw in keywords):
             matched_indices.append(i)
     if not matched_indices:
         return [], 0
@@ -525,14 +576,14 @@ if analyze_btn and uploaded_file and user_query:
             st.divider()
         error_kb_info = "\n".join(error_kb_parts) if error_kb_parts else ""
 
-        # 2. 日志检索
+        # 2. 日志检索（使用多关键词匹配）
         with st.spinner("正在检索相关日志..."):
             relevant_indices, match_count = find_relevant_context(log_lines, full_query, context_half_lines)
             
             if not relevant_indices:
-                st.error(f"未找到包含 '{user_query}' 的日志行。请检查关键词是否正确。")
+                st.error(f"未在日志中找到与描述相关的行。请检查关键词或尝试调整上下文范围。")
             else:
-                st.success(f"✅ 在 {len(log_lines)} 行日志中找到 {match_count} 处匹配，提取了 {len(relevant_indices)} 行上下文。")
+                st.success(f"✅ 在 {len(log_lines)} 行日志中找到 {match_count} 处相关匹配，提取了 {len(relevant_indices)} 行上下文。")
                 
                 if len(relevant_indices) > max_total_lines:
                     relevant_indices = relevant_indices[:max_total_lines]
@@ -541,9 +592,12 @@ if analyze_btn and uploaded_file and user_query:
                 context_lines = [log_lines[i] for i in relevant_indices]
                 log_snippet = "\n".join(context_lines)
 
+                # 高亮显示关键词（支持多个）
+                keywords = full_query.strip().lower().split()
                 highlighted = []
                 for line in context_lines:
-                    if user_query.lower() in line.lower():
+                    line_lower = line.lower()
+                    if any(kw in line_lower for kw in keywords):
                         highlighted.append(f"<span style='background-color:#ffcccc'>{line}</span>")
                     else:
                         highlighted.append(line)
