@@ -1,8 +1,16 @@
+"""
+日志分析器 - 智能错误码诊断模块
+支持从自然语言文本中提取部件错误标识（如 SSW_0x00000070），
+自动匹配本地定义文件，并提供 AI 增强分析建议。
+"""
+
 import os
 import re
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
+import streamlit as st  # 如果您需要在 Web 界面使用
 
+# ==================== 数据结构定义 ====================
 @dataclass
 class ErrorCodeEntry:
     """单个错误码条目"""
@@ -15,6 +23,8 @@ class ErrorCodeEntry:
     service_error_info: str     # 服务提示报错信息
     service_solution: str       # 服务提示解决措施
 
+
+# ==================== 部件错误码管理器 ====================
 class ComponentErrorCodeManager:
     """
     多部件错误码管理器
@@ -22,7 +32,7 @@ class ComponentErrorCodeManager:
     文件命名规范示例：{Component}_{Model/Version}.txt 或 {Component}.txt
     """
 
-    # 部件缩写到全称的映射表（基于用户提供表格）
+    # 部件缩写到全称的映射表
     ABBREVIATION_MAP = {
         'SSW': 'Software',
         'SCU': 'SCU',
@@ -58,7 +68,6 @@ class ComponentErrorCodeManager:
         """
         base = os.path.basename(filename)
         name_without_ext = os.path.splitext(base)[0]
-        # 使用下划线分割，取第一部分作为部件代码
         parts = name_without_ext.split('_')
         if parts:
             return parts[0]  # 保持原始大小写
@@ -71,30 +80,42 @@ class ComponentErrorCodeManager:
         return value.strip().lower() == 'yes'
 
     def _parse_file(self, filepath: str, component_full_name: str) -> List[ErrorCodeEntry]:
-        """解析单个文件，返回条目列表"""
+        """
+        解析单个文件，返回条目列表
+        兼容带 BOM 的 UTF-8 文件及 GBK 编码文件
+        """
         entries = []
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            # 使用 utf-8-sig 自动去除 BOM
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
                 lines = f.readlines()
         except UnicodeDecodeError:
+            # 回退 GBK（部分中文系统文件可能用 ANSI 编码）
             with open(filepath, 'r', encoding='gbk') as f:
                 lines = f.readlines()
 
         if not lines:
             return entries
 
+        # 处理表头，去除首尾空白
         header_line = lines[0].strip()
+        # 手动去除可能残留的 BOM 字符（\ufeff）
+        if header_line.startswith('\ufeff'):
+            header_line = header_line[1:]
+
         headers = header_line.split('\t')
         headers = [h.strip() for h in headers]
 
-        col_map = {name: idx for idx, name in enumerate(headers)}
+        # 建立列名映射（不区分大小写，兼容可能的命名差异）
+        col_map = {name.lower(): idx for idx, name in enumerate(headers)}
 
-        required_cols = ['Code', '用户提示信息（医生、技师）', '英文',
-                         'Severity', 'Software Recoverable', '上传至远程平台',
-                         '服务提示报错信息', '服务提示解决措施']
-        for col in required_cols:
-            if col not in col_map:
-                raise ValueError(f"文件 {filepath} 缺少必要列: {col}")
+        # 检查必需列是否存在（使用小写匹配）
+        required_lower = ['code', '用户提示信息（医生、技师）', '英文',
+                          'severity', 'software recoverable', '上传至远程平台',
+                          '服务提示报错信息', '服务提示解决措施']
+        for col_lower in required_lower:
+            if col_lower not in col_map:
+                raise ValueError(f"缺少必要列: {col_lower}")
 
         for line in lines[1:]:
             line = line.strip()
@@ -104,14 +125,14 @@ class ComponentErrorCodeManager:
             while len(parts) < len(headers):
                 parts.append('')
 
-            code = parts[col_map['Code']].strip()
+            code = parts[col_map['code']].strip()
             if not code:
                 continue
 
             user_prompt_cn = parts[col_map['用户提示信息（医生、技师）']].strip()
             user_prompt_en = parts[col_map['英文']].strip()
-            severity = parts[col_map['Severity']].strip()
-            sw_recoverable = self._parse_bool_field(parts[col_map['Software Recoverable']])
+            severity = parts[col_map['severity']].strip()
+            sw_recoverable = self._parse_bool_field(parts[col_map['software recoverable']])
             upload_remote = self._parse_bool_field(parts[col_map['上传至远程平台']])
             service_info = parts[col_map['服务提示报错信息']].strip()
             service_solution = parts[col_map['服务提示解决措施']].strip()
@@ -131,7 +152,10 @@ class ComponentErrorCodeManager:
         return entries
 
     def _load_all_files(self):
-        """加载目录下所有匹配的错误码文件，按部件全称索引"""
+        """
+        加载目录下所有匹配的错误码文件
+        自动跳过非错误码定义文件（如 Change History.txt）
+        """
         if not os.path.isdir(self.definitions_dir):
             raise ValueError(f"目录不存在: {self.definitions_dir}")
 
@@ -149,7 +173,11 @@ class ComponentErrorCodeManager:
                     self.db[component_full] = {}
                 for entry in entries:
                     self.db[component_full][entry.code] = entry
+            except ValueError:
+                # 缺少必要列的文件视为非错误码定义文件，静默跳过
+                pass
             except Exception as e:
+                # 其他异常（如编码）仍打印警告，便于排查问题
                 print(f"警告: 解析文件 {filename} 失败: {e}")
 
     def query_by_full_name(self, component_full: str, error_code: str) -> Optional[ErrorCodeEntry]:
@@ -158,7 +186,7 @@ class ComponentErrorCodeManager:
         :param component_full: 部件全称，如 'ACS', 'Software'
         :param error_code: 错误码，如 '0x20000035'
         """
-        # 尝试直接匹配（区分大小写）
+        # 尝试直接匹配
         if component_full in self.db:
             return self.db[component_full].get(error_code)
         # 尝试忽略大小写匹配
@@ -213,6 +241,7 @@ class ComponentErrorCodeManager:
             return f"[{component}] {error_code} - {severity}\nUser prompt: {prompt}\nSolution: {solution}"
 
 
+# ==================== 错误诊断助手（集成 AI 分析） ====================
 class ErrorDiagnosisAssistant:
     """
     错误诊断助手：集成错误码管理器，并加入智能分析能力
@@ -251,7 +280,6 @@ class ErrorDiagnosisAssistant:
         for abbr, code, full_match in errors:
             entry = self.manager.query_by_abbreviation(abbr, code)
             if entry:
-                # 获取基本信息
                 if lang == 'cn':
                     prompt = entry.user_prompt_cn
                 else:
@@ -260,7 +288,7 @@ class ErrorDiagnosisAssistant:
                 solution = entry.service_solution
                 service_info = entry.service_error_info
 
-                # 调用 AI 分析函数（此处为模拟）
+                # 调用 AI 分析函数（此处为模拟，可替换为真实 AI）
                 ai_analysis = self._ai_analyze(entry, lang)
 
                 result_block = f"""
@@ -289,14 +317,12 @@ class ErrorDiagnosisAssistant:
     def _ai_analyze(self, entry: ErrorCodeEntry, lang: str = 'cn') -> str:
         """
         AI 智能分析函数（模拟实现）
-        实际使用时，您可以将此函数替换为调用真实的 AI 服务（如 OpenAI、本地模型等）
-        返回分析建议文本
+        实际使用时，可替换为调用 OpenAI / 本地模型等
         """
         severity = entry.severity
         recoverable = entry.software_recoverable
         solution = entry.service_solution
 
-        # 基于规则的简单分析，可替换为 LLM 生成
         if lang == 'cn':
             if severity == 'Error':
                 if recoverable:
@@ -308,10 +334,9 @@ class ErrorDiagnosisAssistant:
             else:
                 analysis = "错误级别未明确，建议按照解决措施进行处理。"
 
-            # 附加基于解决措施的建议
-            if "检查" in solution or "check" in solution.lower():
+            if "检查" in solution:
                 analysis += " 解决措施中涉及多项检查，请逐一核实。"
-            if "更换" in solution or "replace" in solution.lower():
+            if "更换" in solution:
                 analysis += " 可能需要更换硬件部件，请提前准备好备件。"
         else:
             if severity == 'Error':
@@ -332,21 +357,60 @@ class ErrorDiagnosisAssistant:
         return analysis
 
 
-# ------------------------- 使用示例 -------------------------
-if __name__ == '__main__':
-    # 初始化助手，指定定义文件目录
-    assistant = ErrorDiagnosisAssistant(definitions_dir='./error_defs')
+# ==================== Streamlit 应用界面 ====================
+def main():
+    st.set_page_config(page_title="智能日志分析器", page_icon="🔍")
+    st.title("🔍 智能错误码诊断工具")
+    st.markdown("输入包含错误标识（如 `ACS_0x2000003B`）的日志或描述，获取详细解决方案与 AI 分析。")
 
-    # 模拟用户输入的一段日志或描述
-    user_input = """
-    系统在扫描过程中出现异常，报错信息为 SSW_0x20000035，同时 ACS_0x2000003B 也有记录。
-    请帮忙分析原因。
-    """
+    # 初始化诊断助手（请根据实际路径修改）
+    DEFINITIONS_DIR = "./error_defs"
+    if not os.path.isdir(DEFINITIONS_DIR):
+        st.error(f"错误码定义目录不存在: {DEFINITIONS_DIR}")
+        return
 
-    print("=== 智能诊断结果 ===\n")
-    diagnosis_report = assistant.diagnose_text(user_input, lang='cn')
-    print(diagnosis_report)
+    @st.cache_resource
+    def load_assistant():
+        return ErrorDiagnosisAssistant(DEFINITIONS_DIR)
 
-    # 也可以单独查询某个错误码
-    print("\n--- 单独查询 ACS_0x2000003B ---")
-    print(assistant.manager.format_for_user('ACS', '0x2000003B', 'cn'))
+    try:
+        assistant = load_assistant()
+    except Exception as e:
+        st.error(f"初始化错误码管理器失败: {e}")
+        return
+
+    # 语言选择
+    lang = st.radio("选择语言 / Language", ("中文", "English"), horizontal=True)
+    lang_code = "cn" if lang == "中文" else "en"
+
+    # 输入区域
+    user_input = st.text_area(
+        "请输入日志或问题描述：",
+        height=200,
+        placeholder="例如：系统扫描时出现 SSW_0x20000035 和 ACS_0x2000003B 错误..."
+    )
+
+    if st.button("开始诊断", type="primary"):
+        if not user_input.strip():
+            st.warning("请输入内容后再进行诊断。")
+        else:
+            with st.spinner("正在分析中，请稍候..."):
+                report = assistant.diagnose_text(user_input, lang=lang_code)
+            st.success("诊断完成！")
+            st.markdown("### 诊断报告")
+            st.text(report)
+
+    # 侧边栏显示已加载部件信息
+    with st.sidebar:
+        st.header("📚 已加载部件库")
+        components = assistant.manager.get_all_components()
+        if components:
+            for comp in sorted(components):
+                count = len(assistant.manager.get_component_errors(comp))
+                st.write(f"- {comp} ({count} 个错误码)")
+        else:
+            st.write("未加载到任何部件定义，请检查 error_defs 目录。")
+
+
+if __name__ == "__main__":
+    main()
