@@ -1,6 +1,6 @@
 """
 智能日志分析助手 (集成错误码知识库 + AI 诊断)
-新增智能关键词凝练功能，优先使用错误码进行日志检索。
+新增智能关键词凝练并自动填充到附加关键词输入框。
 """
 
 import streamlit as st
@@ -25,39 +25,27 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# 加载环境变量
 load_dotenv()
-
-# 页面配置
-st.set_page_config(page_title="智能日志分析助手 (错误码知识库+AI)", layout="wide")
+st.set_page_config(page_title="智能日志分析助手", layout="wide")
 st.title("🔍 智能日志分析助手 (错误码知识库 + AI 深度诊断)")
 
-# ==================== 初始化组件 ====================
-
-# DeepSeek 配置
+# ==================== 配置 ====================
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner")
-
-# DashScope OCR 配置
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
 DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 DASHSCOPE_OCR_MODEL = os.getenv("DASHSCOPE_OCR_MODEL", "qwen-vl-plus")
 
-# 配置 OpenAI 客户端指向 DeepSeek
 openai.api_key = DEEPSEEK_API_KEY
 openai.api_base = DEEPSEEK_BASE_URL
 
-# 用户反馈知识库路径
 KB_FILE = Path("knowledge_base.json")
 VECTORIZER_FILE = Path("vectorizer.pkl")
 VECTORS_FILE = Path("vectors.npy")
 METADATA_FILE = Path("metadata.json")
-
-# 错误码定义文件目录
 ERROR_DEFS_DIR = Path("./error_defs")
 
-# 尝试导入 pytesseract（备用 OCR）
 try:
     import pytesseract
     TESSERACT_AVAILABLE = True
@@ -65,10 +53,8 @@ except ImportError:
     TESSERACT_AVAILABLE = False
 
 # ==================== 错误码知识库 ====================
-
 @dataclass
 class ErrorCodeEntry:
-    """单个错误码条目"""
     code: str
     code_hex: str
     user_prompt_cn: str
@@ -80,8 +66,6 @@ class ErrorCodeEntry:
     service_solution: str
 
 class ComponentErrorCodeManager:
-    """多部件错误码管理器"""
-    
     ABBREVIATION_MAP = {
         'SSW': 'Software', 'SCU': 'SCU', 'GA': 'GA', 'RFA': 'RFA',
         'Couch': 'Couch', 'LCC': 'LCC', 'MMU': 'MMU', 'ACS': 'ACS',
@@ -107,9 +91,7 @@ class ComponentErrorCodeManager:
 
     def _extract_hex_code(self, code_raw: str) -> str:
         match = re.search(r'(0x[0-9A-Fa-f]+)', code_raw)
-        if match:
-            return match.group(1)
-        return code_raw.strip()
+        return match.group(1) if match else code_raw.strip()
 
     def _parse_file(self, filepath: str, component_full_name: str) -> List[ErrorCodeEntry]:
         entries = []
@@ -125,14 +107,11 @@ class ComponentErrorCodeManager:
         header_line = lines[0].strip()
         if header_line.startswith('\ufeff'):
             header_line = header_line[1:]
-
         headers = header_line.split('\t')
         headers = [h.strip() for h in headers]
         col_map = {name.lower(): idx for idx, name in enumerate(headers)}
-
-        required_lower = ['code', '用户提示信息（医生、技师）', '英文',
-                          'severity', 'software recoverable', '上传至远程平台',
-                          '服务提示报错信息', '服务提示解决措施']
+        required_lower = ['code', '用户提示信息（医生、技师）', '英文', 'severity',
+                          'software recoverable', '上传至远程平台', '服务提示报错信息', '服务提示解决措施']
         for col_lower in required_lower:
             if col_lower not in col_map:
                 raise ValueError(f"缺少必要列: {col_lower}")
@@ -144,71 +123,58 @@ class ComponentErrorCodeManager:
             parts = line.split('\t')
             while len(parts) < len(headers):
                 parts.append('')
-
             code_raw = parts[col_map['code']].strip()
             if not code_raw:
                 continue
-
             code_hex = self._extract_hex_code(code_raw)
-
-            user_prompt_cn = parts[col_map['用户提示信息（医生、技师）']].strip()
-            user_prompt_en = parts[col_map['英文']].strip()
-            severity = parts[col_map['severity']].strip()
-            sw_recoverable = self._parse_bool_field(parts[col_map['software recoverable']])
-            upload_remote = self._parse_bool_field(parts[col_map['上传至远程平台']])
-            service_info = parts[col_map['服务提示报错信息']].strip()
-            service_solution = parts[col_map['服务提示解决措施']].strip()
-
             entry = ErrorCodeEntry(
-                code=code_raw,
-                code_hex=code_hex,
-                user_prompt_cn=user_prompt_cn,
-                user_prompt_en=user_prompt_en,
-                severity=severity,
-                software_recoverable=sw_recoverable,
-                upload_to_remote=upload_remote,
-                service_error_info=service_info,
-                service_solution=service_solution
+                code=code_raw, code_hex=code_hex,
+                user_prompt_cn=parts[col_map['用户提示信息（医生、技师）']].strip(),
+                user_prompt_en=parts[col_map['英文']].strip(),
+                severity=parts[col_map['severity']].strip(),
+                software_recoverable=self._parse_bool_field(parts[col_map['software recoverable']]),
+                upload_to_remote=self._parse_bool_field(parts[col_map['上传至远程平台']]),
+                service_error_info=parts[col_map['服务提示报错信息']].strip(),
+                service_solution=parts[col_map['服务提示解决措施']].strip()
             )
             entries.append(entry)
-
         return entries
 
     def _load_all_files(self):
         if not os.path.isdir(self.definitions_dir):
-            st.warning(f"错误码定义目录不存在: {self.definitions_dir}")
+            st.warning(f"目录不存在: {self.definitions_dir}")
             return
-        txt_files = [f for f in os.listdir(self.definitions_dir) if f.lower().endswith('.txt')]
-        for filename in txt_files:
-            component_full = self._extract_component_from_filename(filename)
-            if not component_full:
+        for filename in os.listdir(self.definitions_dir):
+            if not filename.lower().endswith('.txt'):
                 continue
-            filepath = os.path.join(self.definitions_dir, filename)
+            comp = self._extract_component_from_filename(filename)
+            if not comp:
+                continue
             try:
-                entries = self._parse_file(filepath, component_full)
-                if component_full not in self.db:
-                    self.db[component_full] = {}
-                for entry in entries:
-                    self.db[component_full][entry.code_hex] = entry
-                    if entry.code != entry.code_hex:
-                        self.db[component_full][entry.code] = entry
+                entries = self._parse_file(os.path.join(self.definitions_dir, filename), comp)
+                if comp not in self.db:
+                    self.db[comp] = {}
+                for e in entries:
+                    self.db[comp][e.code_hex] = e
+                    if e.code != e.code_hex:
+                        self.db[comp][e.code] = e
             except ValueError:
                 pass
             except Exception as e:
-                print(f"警告: 解析文件 {filename} 失败: {e}")
+                print(f"警告: 解析 {filename} 失败: {e}")
 
     def query_by_abbreviation(self, abbr: str, error_code: str) -> Optional[ErrorCodeEntry]:
-        full_name = self.ABBREVIATION_MAP.get(abbr.upper())
-        if not full_name:
+        full = self.ABBREVIATION_MAP.get(abbr.upper())
+        if not full:
             return None
-        if full_name in self.db:
-            if error_code in self.db[full_name]:
-                return self.db[full_name][error_code]
+        if full in self.db:
+            if error_code in self.db[full]:
+                return self.db[full][error_code]
             hex_code = self._extract_hex_code(error_code)
-            if hex_code in self.db[full_name]:
-                return self.db[full_name][hex_code]
+            if hex_code in self.db[full]:
+                return self.db[full][hex_code]
         for comp, entries in self.db.items():
-            if comp.lower() == full_name.lower():
+            if comp.lower() == full.lower():
                 if error_code in entries:
                     return entries[error_code]
                 hex_code = self._extract_hex_code(error_code)
@@ -216,18 +182,7 @@ class ComponentErrorCodeManager:
                     return entries[hex_code]
         return None
 
-    def get_all_components(self) -> List[str]:
-        return list(self.db.keys())
-
-    def get_component_errors(self, component_full: str) -> Dict[str, ErrorCodeEntry]:
-        for comp, entries in self.db.items():
-            if comp.lower() == component_full.lower():
-                return entries.copy()
-        return {}
-
 class ErrorDiagnosisAssistant:
-    """错误诊断助手，负责提取错误码和凝练关键词"""
-    
     ERROR_PATTERN = re.compile(r'\b([A-Za-z]+)_(0x[0-9A-Fa-f]+)\b')
     HEX_CODE_PATTERN = re.compile(r'\b(0x[0-9A-Fa-f]+)\b')
 
@@ -235,28 +190,17 @@ class ErrorDiagnosisAssistant:
         self.manager = manager
 
     def extract_error_codes(self, text: str) -> List[str]:
-        """提取完整错误码标识，如 SSW_0x00000070"""
-        return [match.group(0) for match in self.ERROR_PATTERN.finditer(text)]
+        return [m.group(0) for m in self.ERROR_PATTERN.finditer(text)]
 
     def extract_hex_codes(self, text: str) -> List[str]:
-        """提取所有十六进制错误码"""
-        return [match.group(1) for match in self.HEX_CODE_PATTERN.finditer(text)]
+        return [m.group(1) for m in self.HEX_CODE_PATTERN.finditer(text)]
 
     def extract_keywords(self, text: str, extra_keywords: List[str] = None) -> List[str]:
-        """
-        智能凝练检索关键词，按重要性排序：
-        1. 完整错误码标识
-        2. 十六进制错误码（未包含在完整错误码中的）
-        3. 用户额外关键词
-        返回去重后的关键词列表。
-        """
         keywords = []
         err_codes = self.extract_error_codes(text)
         keywords.extend(err_codes)
-        hex_codes = self.extract_hex_codes(text)
-        # 已存在于完整错误码中的十六进制码不再重复添加
         existing_hex = set(re.findall(r'0x[0-9A-Fa-f]+', ' '.join(err_codes)))
-        for hc in hex_codes:
+        for hc in self.extract_hex_codes(text):
             if hc not in existing_hex:
                 keywords.append(hc)
         if extra_keywords:
@@ -264,26 +208,23 @@ class ErrorDiagnosisAssistant:
                 kw = kw.strip()
                 if kw and kw not in keywords:
                     keywords.append(kw)
-        # 去重（不区分大小写）
         seen = set()
         unique = []
         for kw in keywords:
-            lower = kw.lower()
-            if lower not in seen:
-                seen.add(lower)
+            low = kw.lower()
+            if low not in seen:
+                seen.add(low)
                 unique.append(kw)
         return unique
 
     def parse_and_query(self, text: str) -> List[Tuple[str, str, Optional[ErrorCodeEntry]]]:
-        results = []
-        for match in self.ERROR_PATTERN.finditer(text):
-            abbr = match.group(1)
-            code = match.group(2)
+        res = []
+        for m in self.ERROR_PATTERN.finditer(text):
+            abbr, code = m.group(1), m.group(2)
             entry = self.manager.query_by_abbreviation(abbr, code)
-            results.append((abbr, code, entry))
-        return results
+            res.append((abbr, code, entry))
+        return res
 
-# 初始化
 @st.cache_resource
 def init_error_manager():
     return ComponentErrorCodeManager(str(ERROR_DEFS_DIR))
@@ -291,8 +232,7 @@ def init_error_manager():
 error_manager = init_error_manager()
 error_assistant = ErrorDiagnosisAssistant(error_manager)
 
-# ==================== 用户反馈知识库 ====================
-
+# ==================== 知识库操作 ====================
 def load_knowledge_base():
     if KB_FILE.exists():
         with open(KB_FILE, "r", encoding="utf-8") as f:
@@ -312,7 +252,7 @@ def update_vectorizer_and_vectors(kb):
     with open(VECTORIZER_FILE, "wb") as f:
         pickle.dump(vectorizer, f)
     np.save(VECTORS_FILE, vectors.toarray())
-    metadata = [{"id": item["id"], "query": item["query"], "solution": item["solution"]} for item in kb]
+    metadata = [{"id": it["id"], "query": it["query"], "solution": it["solution"]} for it in kb]
     with open(METADATA_FILE, "w", encoding="utf-8") as f:
         json.dump(metadata, f, ensure_ascii=False, indent=2)
     return vectorizer, vectors
@@ -322,7 +262,7 @@ def load_vectorizer_and_vectors():
         with open(VECTORIZER_FILE, "rb") as f:
             vectorizer = pickle.load(f)
         vectors = np.load(VECTORS_FILE)
-        with open(METADATA_FILE, "r", encoding="utf-8") as f:
+        with open(METADATA_FILE, "r") as f:
             metadata = json.load(f)
         return vectorizer, vectors, metadata
     return None, None, []
@@ -330,160 +270,127 @@ def load_vectorizer_and_vectors():
 def find_similar_solutions(query, vectorizer, vectors, metadata, top_k=2):
     if vectorizer is None or vectors is None or not metadata:
         return []
-    query_vec = vectorizer.transform([query])
-    sims = cosine_similarity(query_vec, vectors).flatten()
-    top_indices = sims.argsort()[-top_k:][::-1]
-    results = []
-    for idx in top_indices:
-        if sims[idx] > 0.1:
-            results.append(metadata[idx]["solution"])
-    return results
+    q_vec = vectorizer.transform([query])
+    sims = cosine_similarity(q_vec, vectors).flatten()
+    idxs = sims.argsort()[-top_k:][::-1]
+    return [metadata[i]["solution"] for i in idxs if sims[i] > 0.1]
 
-# ==================== OCR 功能 ====================
-
+# ==================== OCR ====================
 def ocr_image_dashscope(image_bytes):
     if not DASHSCOPE_API_KEY:
         return None
     try:
-        img_base64 = base64.b64encode(image_bytes).decode("utf-8")
-        headers = {
-            "Authorization": f"Bearer {DASHSCOPE_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        img_b64 = base64.b64encode(image_bytes).decode()
+        headers = {"Authorization": f"Bearer {DASHSCOPE_API_KEY}", "Content-Type": "application/json"}
         payload = {
             "model": DASHSCOPE_OCR_MODEL,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "请识别并提取图片中的所有文字内容，不要添加额外说明。"},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}}
-                    ]
-                }
-            ],
+            "messages": [{"role": "user", "content": [
+                {"type": "text", "text": "请识别并提取图片中的所有文字内容，不要添加额外说明。"},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+            ]}],
             "max_tokens": 1000
         }
-        response = requests.post(f"{DASHSCOPE_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=30)
-        if response.status_code == 200:
-            return response.json()["choices"][0]["message"]["content"].strip()
-        else:
-            st.warning(f"DashScope OCR 请求失败: {response.status_code}")
-            return None
+        resp = requests.post(f"{DASHSCOPE_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=30)
+        if resp.status_code == 200:
+            return resp.json()["choices"][0]["message"]["content"].strip()
     except Exception as e:
         st.warning(f"DashScope OCR 异常: {e}")
-        return None
+    return None
 
 def ocr_image_tesseract(image_bytes):
     if not TESSERACT_AVAILABLE:
         return None
     try:
-        image = Image.open(BytesIO(image_bytes))
-        text = pytesseract.image_to_string(image, lang='eng+chi_sim')
-        return text.strip()
+        img = Image.open(BytesIO(image_bytes))
+        return pytesseract.image_to_string(img, lang='eng+chi_sim').strip()
     except Exception as e:
         st.warning(f"Tesseract OCR 异常: {e}")
-        return None
+    return None
 
 def perform_ocr(uploaded_file):
-    image_bytes = uploaded_file.read()
-    text = ocr_image_dashscope(image_bytes)
+    img_bytes = uploaded_file.read()
+    text = ocr_image_dashscope(img_bytes)
     if text is not None:
         return text, "DashScope"
-    text = ocr_image_tesseract(image_bytes)
+    text = ocr_image_tesseract(img_bytes)
     if text is not None:
-        return text, "Tesseract (本地)"
+        return text, "Tesseract"
     return None, "OCR 失败"
 
-# ==================== 日志检索（智能关键词版） ====================
-
+# ==================== 日志检索 ====================
 def find_relevant_context(log_lines, keywords: List[str], context_lines=80):
-    """
-    使用凝练后的关键词列表进行 OR 匹配检索。
-    返回匹配行索引列表和匹配数量。
-    """
     if not log_lines or not keywords:
         return [], 0
-
-    matched_indices = []
-    keywords_lower = [kw.lower() for kw in keywords]
+    matched = []
+    kw_lower = [k.lower() for k in keywords]
     for i, line in enumerate(log_lines):
-        line_lower = line.lower()
-        if any(kw in line_lower for kw in keywords_lower):
-            matched_indices.append(i)
-
-    if not matched_indices:
+        if any(k in line.lower() for k in kw_lower):
+            matched.append(i)
+    if not matched:
         return [], 0
-
     included = set()
-    for idx in matched_indices:
+    for idx in matched:
         start = max(0, idx - context_lines)
         end = min(len(log_lines), idx + context_lines + 1)
         included.update(range(start, end))
-
-    return sorted(included), len(matched_indices)
-
-# ==================== AI 分析 ====================
+    return sorted(included), len(matched)
 
 def generate_analysis(log_snippet, user_query, similar_cases="", error_kb_info=""):
-    prompt = f"""
-你是一名资深的MRI系统软件和硬件日志分析专家。请根据以下日志片段、用户的问题描述以及本地错误码知识库信息，进行详细的原因分析。
+    prompt = f"""你是一名资深的MRI系统软硬件日志分析专家。请根据以下信息进行分析。
 
 【用户问题描述】
 {user_query}
 
 【本地错误码知识库信息】
-{error_kb_info if error_kb_info else "无相关错误码定义"}
+{error_kb_info or "无"}
 
 【相关日志片段】
-{log_snippet if log_snippet else "（未检索到相关日志，请仅依据错误码定义和问题描述进行分析）"}
+{log_snippet or "（未检索到相关日志）"}
 
-【历史相似案例参考】
-{similar_cases if similar_cases else "无"}
+【历史相似案例】
+{similar_cases or "无"}
 
 【分析要求】
-1. **错误直接原因**：明确指出报错代码或现象对应的直接失败点。
-2. **故障链追溯**：按时间顺序描述错误发生前的关键状态变化。
-3. **潜在根本原因**：基于日志和领域知识，列出3个最可能的根本原因，并解释推断依据。
-4. **排查建议**：提供具体、可操作的后续排查步骤。注意结合官方错误码定义中的解决措施。
+1. 错误直接原因
+2. 故障链追溯
+3. 潜在根本原因（3个，按可能性排序）
+4. 排查建议
 
-请以清晰的结构化Markdown格式输出。
-"""
+请以结构化Markdown格式输出。"""
     try:
-        proxy_url = os.getenv("HTTP_PROXY")
-        http_client = httpx.Client(proxy=proxy_url) if proxy_url else None
-        client = openai.OpenAI(
-            api_key=openai.api_key,
-            base_url=openai.api_base,
-            http_client=http_client
-        )
-        response = client.chat.completions.create(
+        proxy = os.getenv("HTTP_PROXY")
+        http_client = httpx.Client(proxy=proxy) if proxy else None
+        client = openai.OpenAI(api_key=openai.api_key, base_url=openai.api_base, http_client=http_client)
+        resp = client.chat.completions.create(
             model=DEEPSEEK_MODEL,
-            messages=[
-                {"role": "system", "content": "你是一个专业的日志分析专家，擅长MRI系统软硬件问题诊断。"},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.2,
-            max_tokens=2000
+            messages=[{"role": "system", "content": "你是一个专业的MRI日志分析专家。"},
+                      {"role": "user", "content": prompt}],
+            temperature=0.2, max_tokens=2000
         )
-        return response.choices[0].message.content
+        return resp.choices[0].message.content
     except Exception as e:
-        return f"AI 分析失败: {str(e)}"
+        return f"AI 分析失败: {e}"
 
 def render_screenshot_content(analysis_md, log_highlight):
     return f"""
     <div id="screenshot-area" style="background:white; padding:20px; font-family:Arial; max-width:900px;">
         <h2>📋 日志分析报告</h2>
-        <div style="margin:20px 0; line-height:1.6;">
-            {analysis_md.replace(chr(10), '<br>')}
-        </div>
+        <div style="margin:20px 0; line-height:1.6;">{analysis_md.replace(chr(10), '<br>')}</div>
         <h3>📄 关键日志上下文</h3>
-        <pre style="background:#f5f5f5; padding:15px; border-radius:5px; overflow-x:auto; white-space:pre-wrap;">
-{log_highlight}
-        </pre>
+        <pre style="background:#f5f5f5; padding:15px; border-radius:5px; overflow-x:auto; white-space:pre-wrap;">{log_highlight}</pre>
     </div>
     """
 
-# ==================== Streamlit 界面 ====================
+# ==================== 界面与交互逻辑 ====================
+# 初始化 session_state
+if "auto_fill_done" not in st.session_state:
+    st.session_state.auto_fill_done = False
+if "run_analysis" not in st.session_state:
+    st.session_state.run_analysis = False
+if "extracted_kws" not in st.session_state:
+    st.session_state.extracted_kws = []
+if "user_query_full" not in st.session_state:
+    st.session_state.user_query_full = ""
 
 with st.sidebar:
     st.header("⚙️ 配置")
@@ -495,41 +402,32 @@ with st.sidebar:
             openai.api_key = api_key_input
             openai.api_base = base_url_input
             DEEPSEEK_MODEL = model_input
-
     st.divider()
     st.markdown("### 📚 知识库统计")
     kb = load_knowledge_base()
-    st.metric("用户反馈解决方案", len(kb))
-    st.markdown("### 🗂️ 错误码知识库")
-    components = error_manager.get_all_components()
-    if components:
-        st.metric("已加载部件定义", len(components))
+    st.metric("用户反馈方案", len(kb))
+    st.metric("错误码部件", len(error_manager.get_all_components()))
 
 col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("📂 上传日志文件")
-    uploaded_file = st.file_uploader("选择 .log 或 .txt 文件", type=["log", "txt"])
+    uploaded_file = st.file_uploader("选择 .log 或 .txt", type=["log", "txt"])
     log_lines = []
     if uploaded_file:
-        raw_data = uploaded_file.read()
-        result = chardet.detect(raw_data)
-        encoding = result['encoding'] if result['encoding'] else 'gbk'
-        log_content = raw_data.decode(encoding, errors='ignore')
+        raw = uploaded_file.read()
+        enc = chardet.detect(raw)['encoding'] or 'gbk'
+        log_content = raw.decode(enc, errors='ignore')
         log_lines = log_content.splitlines()
         st.success(f"已加载 {len(log_lines)} 行日志")
-        with st.expander("📄 日志预览 (前100行)"):
+        with st.expander("预览前100行"):
             st.text("\n".join(log_lines[:100]))
 
     st.subheader("❓ 问题描述")
-    user_query = st.text_area(
-        "请描述问题（支持错误代码如 SSW_0x00000070）",
-        height=120,
-        placeholder="例如：频率校正信噪比异常(SSW_0x00000070) ..."
-    )
+    user_query = st.text_area("描述问题（支持 SSW_0x00000070）", height=120, placeholder="例如：频率校正信噪比异常(SSW_0x00000070)")
 
     st.subheader("🖼️ 图片上传 (可选)")
-    uploaded_image = st.file_uploader("支持 PNG / JPG / JPEG", type=["png", "jpg", "jpeg"])
+    uploaded_image = st.file_uploader("支持 PNG/JPG", type=["png", "jpg", "jpeg"])
     ocr_text = ""
     if uploaded_image:
         with st.spinner("OCR 识别中..."):
@@ -545,129 +443,159 @@ with col2:
     st.subheader("🔎 分析设置")
     context_lines = st.slider("上下文行数", 20, 500, 80)
     max_lines = st.slider("最大输出行数", 100, 5000, 1500)
-    extra_keywords_input = st.text_input("附加检索关键词 (用逗号分隔，可选)", 
-                                         help="可补充其他关键词，如 '频率校正'、'信噪比' 等")
+    # 绑定 key，以便动态更新
+    extra_keywords_input = st.text_input(
+        "附加检索关键词 (用逗号分隔，可选)",
+        key="extra_keywords_input",
+        help="可补充其他关键词，如 '频率校正'、'信噪比' 等。点击分析后会自动填充智能提取的关键词。"
+    )
     analyze_btn = st.button("🚀 开始智能分析", type="primary", use_container_width=True)
 
+# ==================== 分析流程控制 ====================
+def perform_analysis():
+    """实际执行分析逻辑的函数"""
+    full_query = st.session_state.user_query_full
+    # 1. 错误码知识库查询
+    error_kb_parts = []
+    parsed = error_assistant.parse_and_query(full_query)
+    if parsed:
+        st.subheader("📖 错误码知识库匹配")
+        for abbr, code, entry in parsed:
+            if entry:
+                full_name = error_manager.ABBREVIATION_MAP.get(abbr.upper(), abbr)
+                st.markdown(f"**`{abbr}_{code}`** → 部件 `{full_name}`  \n- 严重程度: {entry.severity}  \n- 解决措施: {entry.service_solution}")
+                error_kb_parts.append(
+                    f"错误码 {abbr}_{code} (部件{full_name})：\n严重程度: {entry.severity}\n解决措施: {entry.service_solution}\n"
+                )
+            else:
+                st.warning(f"未找到错误码 {abbr}_{code} 的定义")
+        st.divider()
+    error_kb_info = "\n".join(error_kb_parts)
+
+    # 2. 获取关键词（从 session_state 或重新提取）
+    keywords = st.session_state.extracted_kws
+    if not keywords:
+        # 若没有预存，当场提取（通常不会发生）
+        extra_kws = [k.strip() for k in extra_keywords_input.split(',') if k.strip()] if extra_keywords_input else []
+        keywords = error_assistant.extract_keywords(full_query, extra_keywords=extra_kws)
+        st.session_state.extracted_kws = keywords
+
+    st.markdown("**🔑 使用的检索关键词:**")
+    st.write(", ".join(keywords) if keywords else "（未提取到关键词，将使用原始描述子串匹配）")
+
+    # 3. 日志检索
+    with st.spinner("检索日志中..."):
+        indices, match_cnt = find_relevant_context(log_lines, keywords, context_lines)
+        if not indices:
+            st.warning("未在日志中找到相关行，将仅基于错误码定义和描述进行分析。")
+            log_snippet = ""
+            log_highlight_html = "（无相关日志）"
+        else:
+            st.success(f"找到 {match_cnt} 处匹配，提取 {len(indices)} 行上下文。")
+            if len(indices) > max_lines:
+                indices = indices[:max_lines]
+            context_lines_list = [log_lines[i] for i in indices]
+            log_snippet = "\n".join(context_lines_list)
+            kw_lower = [k.lower() for k in keywords]
+            highlighted = []
+            for line in context_lines_list:
+                if any(k in line.lower() for k in kw_lower):
+                    highlighted.append(f"<span style='background-color:#ffcccc'>{line}</span>")
+                else:
+                    highlighted.append(line)
+            log_highlight_html = "<br>".join(highlighted)
+            with st.expander("查看高亮日志", expanded=True):
+                st.markdown(f"<pre>{log_highlight_html}</pre>", unsafe_allow_html=True)
+
+    # 4. 相似案例
+    similar_text = ""
+    vec, vcts, meta = load_vectorizer_and_vectors()
+    if vec and meta:
+        sols = find_similar_solutions(full_query, vec, vcts, meta)
+        if sols:
+            similar_text = "\n".join(f"- {s}" for s in sols)
+
+    # 5. AI 分析
+    with st.spinner("🤖 AI 分析中..."):
+        analysis_result = generate_analysis(log_snippet, full_query, similar_text, error_kb_info)
+
+    st.subheader("📊 综合分析报告")
+    st.markdown(analysis_result)
+
+    # 导出报告
+    st.divider()
+    st.subheader("📸 导出报告")
+    html_str = render_screenshot_content(analysis_result, log_highlight_html.replace("<br>", "\n") if 'log_highlight_html' in locals() else "无")
+    st.components.v1.html(f"""
+    <html><head><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script></head>
+    <body>
+        <div id="capture" style="display:none;">{html_str}</div>
+        <button id="btn" style="padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px;">⬇️ 下载截图</button>
+        <script>
+            document.getElementById('btn').addEventListener('click', function(){{
+                html2canvas(document.getElementById('capture'), {{ scale: 2, backgroundColor: '#ffffff' }}).then(canvas => {{
+                    var link = document.createElement('a');
+                    link.download = 'log_analysis_report.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }});
+            }});
+        </script>
+    </body></html>
+    """, height=80)
+
+    # 反馈
+    st.divider()
+    st.subheader("📝 提交解决方案")
+    user_solution = st.text_area("分享您的解决方案...")
+    if st.button("提交"):
+        if user_solution:
+            kb = load_knowledge_base()
+            new_id = f"sol_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            kb.append({"id": new_id, "query": full_query, "solution": user_solution, "timestamp": datetime.now().isoformat()})
+            save_knowledge_base(kb)
+            update_vectorizer_and_vectors(kb)
+            st.success("感谢反馈！")
+            st.rerun()
+        else:
+            st.warning("请输入内容")
+
+    # 清除分析状态
+    st.session_state.run_analysis = False
+
+# 点击分析按钮时的处理
 if analyze_btn and uploaded_file and user_query:
     if not openai.api_key:
         st.error("请先输入 DeepSeek API Key")
     else:
-        full_query = user_query
+        # 准备完整查询
+        full_q = user_query
         if ocr_text:
-            full_query = f"{user_query}\n\n[图片OCR内容]\n{ocr_text}"
+            full_q = f"{user_query}\n\n[图片OCR内容]\n{ocr_text}"
+        st.session_state.user_query_full = full_q
 
-        # 1. 错误码知识库查询
-        error_kb_parts = []
-        parsed_errors = error_assistant.parse_and_query(full_query)
-        if parsed_errors:
-            st.subheader("📖 错误码知识库匹配")
-            for abbr, code, entry in parsed_errors:
-                if entry:
-                    full_name = error_manager.ABBREVIATION_MAP.get(abbr.upper(), abbr)
-                    st.markdown(f"**`{abbr}_{code}`** → 部件 `{full_name}`  \n- 严重程度: {entry.severity}  \n- 解决措施: {entry.service_solution}")
-                    error_kb_parts.append(
-                        f"错误码 {abbr}_{code} (部件{full_name})：\n"
-                        f"严重程度: {entry.severity}\n"
-                        f"解决措施: {entry.service_solution}\n"
-                    )
-                else:
-                    st.warning(f"未找到错误码 {abbr}_{code} 的定义")
-            st.divider()
-        error_kb_info = "\n".join(error_kb_parts)
-
-        # 2. 智能凝练检索关键词
-        extra_kws = [kw.strip() for kw in extra_keywords_input.split(',') if kw.strip()] if extra_keywords_input else []
-        keywords = error_assistant.extract_keywords(full_query, extra_keywords=extra_kws)
-        
-        st.markdown("**🔑 用于检索的关键词 (按重要性排序):**")
-        if keywords:
-            st.write(", ".join(keywords))
+        # 如果尚未自动填充关键词，则提取并填充
+        if not st.session_state.auto_fill_done:
+            # 提取关键词（不含用户手动输入，因为输入框可能还是旧值）
+            extra_kws = [k.strip() for k in extra_keywords_input.split(',') if k.strip()] if extra_keywords_input else []
+            keywords = error_assistant.extract_keywords(full_q, extra_keywords=extra_kws)
+            st.session_state.extracted_kws = keywords
+            # 将关键词以逗号连接，填入输入框的 session_state
+            st.session_state.extra_keywords_input = ", ".join(keywords)
+            st.session_state.auto_fill_done = True
+            st.session_state.run_analysis = True
+            st.rerun()  # 刷新界面显示填充后的关键词
         else:
-            st.write("未提取到明确关键词，将使用原始描述进行子串匹配。")
-            keywords = [full_query]  # 回退
+            # 已经填充过，直接执行分析
+            st.session_state.run_analysis = True
 
-        # 3. 日志检索
-        with st.spinner("检索日志中..."):
-            relevant_indices, match_count = find_relevant_context(log_lines, keywords, context_lines)
-            if not relevant_indices:
-                st.warning("未在日志中找到相关行，将仅基于错误码定义和问题描述进行分析。")
-                log_snippet = ""
-                log_highlight_html = "（无相关日志）"
-            else:
-                st.success(f"找到 {match_count} 处匹配，提取 {len(relevant_indices)} 行上下文。")
-                if len(relevant_indices) > max_lines:
-                    relevant_indices = relevant_indices[:max_lines]
-                context_lines_list = [log_lines[i] for i in relevant_indices]
-                log_snippet = "\n".join(context_lines_list)
-                # 高亮
-                keywords_lower = [kw.lower() for kw in keywords]
-                highlighted = []
-                for line in context_lines_list:
-                    line_lower = line.lower()
-                    if any(kw in line_lower for kw in keywords_lower):
-                        highlighted.append(f"<span style='background-color:#ffcccc'>{line}</span>")
-                    else:
-                        highlighted.append(line)
-                log_highlight_html = "<br>".join(highlighted)
-                with st.expander("查看高亮日志", expanded=True):
-                    st.markdown(f"<pre>{log_highlight_html}</pre>", unsafe_allow_html=True)
-
-        # 4. 相似案例
-        similar_text = ""
-        vectorizer, vectors, metadata = load_vectorizer_and_vectors()
-        if vectorizer and metadata:
-            solutions = find_similar_solutions(full_query, vectorizer, vectors, metadata)
-            if solutions:
-                similar_text = "\n".join([f"- {sol}" for sol in solutions])
-
-        # 5. AI 分析
-        with st.spinner("🤖 AI 分析中..."):
-            analysis_result = generate_analysis(log_snippet, full_query, similar_text, error_kb_info)
-
-        st.subheader("📊 综合分析报告")
-        st.markdown(analysis_result)
-
-        # 导出报告
-        st.divider()
-        st.subheader("📸 导出报告")
-        screenshot_html = render_screenshot_content(analysis_result, log_highlight_html.replace("<br>", "\n") if 'log_highlight_html' in locals() else "（无相关日志）")
-        st.components.v1.html(f"""
-        <html><head><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script></head>
-        <body>
-            <div id="capture" style="display:none;">{screenshot_html}</div>
-            <button id="btn" style="padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px;">⬇️ 下载截图</button>
-            <script>
-                document.getElementById('btn').addEventListener('click', function() {{
-                    html2canvas(document.getElementById('capture'), {{ scale: 2, backgroundColor: '#ffffff' }}).then(canvas => {{
-                        var link = document.createElement('a');
-                        link.download = 'log_analysis_report.png';
-                        link.href = canvas.toDataURL();
-                        link.click();
-                    }});
-                }});
-            </script>
-        </body></html>
-        """, height=80)
-
-        # 反馈
-        st.divider()
-        st.subheader("📝 提交解决方案")
-        user_solution = st.text_area("分享您的解决方案...")
-        if st.button("提交"):
-            if user_solution:
-                kb = load_knowledge_base()
-                new_id = f"sol_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                kb.append({"id": new_id, "query": full_query, "solution": user_solution, "timestamp": datetime.now().isoformat()})
-                save_knowledge_base(kb)
-                update_vectorizer_and_vectors(kb)
-                st.success("感谢反馈！")
-                st.rerun()
-            else:
-                st.warning("请输入内容")
-
-else:
-    st.info("👆 请上传日志文件并输入问题描述，然后点击「开始智能分析」")
+# 当 run_analysis 为 True 时执行分析
+if st.session_state.get("run_analysis", False) and uploaded_file and log_lines:
+    perform_analysis()
+    # 重置自动填充标志，以便下次分析可重新提取
+    st.session_state.auto_fill_done = False
+elif not uploaded_file and analyze_btn:
+    st.info("👆 请上传日志文件")
 
 st.divider()
 st.caption("Powered by Streamlit + DeepSeek + 本地错误码知识库")
