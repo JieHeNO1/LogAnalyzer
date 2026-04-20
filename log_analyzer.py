@@ -1,6 +1,5 @@
 """
-智能日志分析助手 (集成错误码知识库 + AI 诊断)
-修复了自动填充关键词时的 Streamlit API 冲突。
+智能日志分析助手 (集成错误码知识库 + AI 智能关键词提取)
 """
 
 import streamlit as st
@@ -204,7 +203,41 @@ class ErrorDiagnosisAssistant:
     def extract_hex_codes(self, text: str) -> List[str]:
         return [m.group(1) for m in self.HEX_CODE_PATTERN.finditer(text)]
 
-    def extract_keywords(self, text: str, extra_keywords: List[str] = None) -> List[str]:
+    def ai_extract_keywords(self, text: str) -> List[str]:
+        """调用 AI 从文本中智能提取关键词"""
+        if not openai.api_key:
+            return []
+        prompt = f"""
+请从以下用户问题描述中提取用于日志检索的关键词。
+重点关注：错误码（如 SSW_0x00000070）、错误名称（如“频率校正信噪比异常”）、关键硬件（如“线圈”、“水模”、“梯度”）。
+请以 JSON 数组格式返回，例如 ["SSW_0x00000070", "频率校正", "信噪比"]。
+只返回 JSON 数组，不要包含其他文字。
+
+用户描述：
+{text}
+"""
+        try:
+            proxy = os.getenv("HTTP_PROXY")
+            http_client = httpx.Client(proxy=proxy) if proxy else None
+            client = openai.OpenAI(api_key=openai.api_key, base_url=openai.api_base, http_client=http_client)
+            resp = client.chat.completions.create(
+                model=DEEPSEEK_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=200
+            )
+            content = resp.choices[0].message.content.strip()
+            content = re.sub(r'^```json\s*', '', content)
+            content = re.sub(r'\s*```$', '', content)
+            keywords = json.loads(content)
+            if isinstance(keywords, list):
+                return [str(kw).strip() for kw in keywords if str(kw).strip()]
+        except Exception as e:
+            st.warning(f"AI 关键词提取失败: {e}")
+        return []
+
+    def extract_keywords(self, text: str, extra_keywords: List[str] = None, use_ai_fallback: bool = True) -> List[str]:
+        """智能凝练检索关键词，支持 AI 备用提取"""
         keywords = []
         err_codes = self.extract_error_codes(text)
         keywords.extend(err_codes)
@@ -212,11 +245,19 @@ class ErrorDiagnosisAssistant:
         for hc in self.extract_hex_codes(text):
             if hc not in existing_hex:
                 keywords.append(hc)
+
+        # 若正则未提取到任何关键词，且允许 AI fallback，则调用 AI 提取
+        if not keywords and use_ai_fallback and text.strip():
+            with st.spinner("🤖 AI 正在智能提取关键词..."):
+                ai_kws = self.ai_extract_keywords(text)
+                keywords.extend(ai_kws)
+
         if extra_keywords:
             for kw in extra_keywords:
                 kw = kw.strip()
                 if kw and kw not in keywords:
                     keywords.append(kw)
+
         seen = set()
         unique = []
         for kw in keywords:
@@ -399,7 +440,6 @@ if "extracted_kws" not in st.session_state:
     st.session_state.extracted_kws = []
 if "user_query_full" not in st.session_state:
     st.session_state.user_query_full = ""
-# 用于自动填充的字符串变量（独立于输入框的 key）
 if "auto_keywords_str" not in st.session_state:
     st.session_state.auto_keywords_str = ""
 
@@ -435,7 +475,8 @@ with col1:
             st.text("\n".join(log_lines[:100]))
 
     st.subheader("❓ 问题描述")
-    user_query = st.text_area("描述问题（支持 SSW_0x00000070）", height=120, placeholder="例如：频率校正信噪比异常(SSW_0x00000070)")
+    user_query = st.text_area("描述问题（支持 SSW_0x00000070）", height=120,
+                              placeholder="例如：频率校正信噪比异常(SSW_0x00000070)")
 
     st.subheader("🖼️ 图片上传 (可选)")
     uploaded_image = st.file_uploader("支持 PNG/JPG", type=["png", "jpg", "jpeg"])
@@ -454,12 +495,11 @@ with col2:
     st.subheader("🔎 分析设置")
     context_lines = st.slider("上下文行数", 20, 500, 80)
     max_lines = st.slider("最大输出行数", 100, 5000, 1500)
-    # 关键修改：value 绑定到 st.session_state.auto_keywords_str
     extra_keywords_input = st.text_input(
         "附加检索关键词 (用逗号分隔，可选)",
         key="extra_keywords_input",
         value=st.session_state.auto_keywords_str,
-        help="可补充其他关键词，如 '频率校正'、'信噪比' 等。点击分析后会自动填充智能提取的关键词。"
+        help="可补充其他关键词。点击分析后会自动填充智能提取的关键词。"
     )
     analyze_btn = st.button("🚀 开始智能分析", type="primary", use_container_width=True)
 
@@ -485,11 +525,15 @@ def perform_analysis():
     keywords = st.session_state.extracted_kws
     if not keywords:
         extra_kws = [k.strip() for k in extra_keywords_input.split(',') if k.strip()] if extra_keywords_input else []
-        keywords = error_assistant.extract_keywords(full_query, extra_keywords=extra_kws)
+        keywords = error_assistant.extract_keywords(full_query, extra_keywords=extra_kws, use_ai_fallback=True)
         st.session_state.extracted_kws = keywords
 
     st.markdown("**🔑 使用的检索关键词:**")
-    st.write(", ".join(keywords) if keywords else "（未提取到关键词，将使用原始描述子串匹配）")
+    if keywords:
+        st.write(", ".join(keywords))
+    else:
+        st.write("（未提取到关键词，将使用原始描述子串匹配）")
+        keywords = [full_query]
 
     with st.spinner("检索日志中..."):
         indices, match_cnt = find_relevant_context(log_lines, keywords, context_lines)
@@ -503,10 +547,12 @@ def perform_analysis():
                 indices = indices[:max_lines]
             context_lines_list = [log_lines[i] for i in indices]
             log_snippet = "\n".join(context_lines_list)
-            kw_lower = [k.lower() for k in keywords]
+            kw_lower = [k.lower() for k in keywords if k != full_query]
             highlighted = []
             for line in context_lines_list:
-                if any(k in line.lower() for k in kw_lower):
+                if kw_lower and any(k in line.lower() for k in kw_lower):
+                    highlighted.append(f"<span style='background-color:#ffcccc'>{line}</span>")
+                elif not kw_lower and full_query.lower() in line.lower():
                     highlighted.append(f"<span style='background-color:#ffcccc'>{line}</span>")
                 else:
                     highlighted.append(line)
@@ -529,7 +575,8 @@ def perform_analysis():
 
     st.divider()
     st.subheader("📸 导出报告")
-    html_str = render_screenshot_content(analysis_result, log_highlight_html.replace("<br>", "\n") if 'log_highlight_html' in locals() else "无")
+    html_str = render_screenshot_content(analysis_result,
+                                         log_highlight_html.replace("<br>", "\n") if 'log_highlight_html' in locals() else "无")
     st.components.v1.html(f"""
     <html><head><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script></head>
     <body>
@@ -576,9 +623,8 @@ if analyze_btn and uploaded_file and user_query:
 
         if not st.session_state.auto_fill_done:
             extra_kws = [k.strip() for k in extra_keywords_input.split(',') if k.strip()] if extra_keywords_input else []
-            keywords = error_assistant.extract_keywords(full_q, extra_keywords=extra_kws)
+            keywords = error_assistant.extract_keywords(full_q, extra_keywords=extra_kws, use_ai_fallback=True)
             st.session_state.extracted_kws = keywords
-            # 修改 auto_keywords_str 而不是直接修改 extra_keywords_input
             st.session_state.auto_keywords_str = ", ".join(keywords)
             st.session_state.auto_fill_done = True
             st.session_state.run_analysis = True
@@ -589,7 +635,6 @@ if analyze_btn and uploaded_file and user_query:
 if st.session_state.get("run_analysis", False) and uploaded_file and log_lines:
     perform_analysis()
     st.session_state.auto_fill_done = False
-    # 分析完成后可清空自动填充字符串，以便下次分析可以重新填充（可选）
     st.session_state.auto_keywords_str = ""
 elif not uploaded_file and analyze_btn:
     st.info("👆 请上传日志文件")
