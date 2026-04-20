@@ -1,6 +1,6 @@
 """
 智能日志分析助手 (集成错误码知识库 + AI 诊断)
-新增智能关键词凝练并自动填充到附加关键词输入框。
+修复了自动填充关键词时的 Streamlit API 冲突。
 """
 
 import streamlit as st
@@ -164,11 +164,9 @@ class ComponentErrorCodeManager:
                 print(f"警告: 解析 {filename} 失败: {e}")
 
     def get_all_components(self) -> List[str]:
-        """返回所有已加载的部件全称列表"""
         return list(self.db.keys())
 
     def get_component_errors(self, component_full: str) -> Dict[str, ErrorCodeEntry]:
-        """返回指定部件的所有错误码条目"""
         for comp, entries in self.db.items():
             if comp.lower() == component_full.lower():
                 return entries.copy()
@@ -401,6 +399,9 @@ if "extracted_kws" not in st.session_state:
     st.session_state.extracted_kws = []
 if "user_query_full" not in st.session_state:
     st.session_state.user_query_full = ""
+# 用于自动填充的字符串变量（独立于输入框的 key）
+if "auto_keywords_str" not in st.session_state:
+    st.session_state.auto_keywords_str = ""
 
 with st.sidebar:
     st.header("⚙️ 配置")
@@ -453,9 +454,11 @@ with col2:
     st.subheader("🔎 分析设置")
     context_lines = st.slider("上下文行数", 20, 500, 80)
     max_lines = st.slider("最大输出行数", 100, 5000, 1500)
+    # 关键修改：value 绑定到 st.session_state.auto_keywords_str
     extra_keywords_input = st.text_input(
         "附加检索关键词 (用逗号分隔，可选)",
         key="extra_keywords_input",
+        value=st.session_state.auto_keywords_str,
         help="可补充其他关键词，如 '频率校正'、'信噪比' 等。点击分析后会自动填充智能提取的关键词。"
     )
     analyze_btn = st.button("🚀 开始智能分析", type="primary", use_container_width=True)
@@ -575,7 +578,8 @@ if analyze_btn and uploaded_file and user_query:
             extra_kws = [k.strip() for k in extra_keywords_input.split(',') if k.strip()] if extra_keywords_input else []
             keywords = error_assistant.extract_keywords(full_q, extra_keywords=extra_kws)
             st.session_state.extracted_kws = keywords
-            st.session_state.extra_keywords_input = ", ".join(keywords)
+            # 修改 auto_keywords_str 而不是直接修改 extra_keywords_input
+            st.session_state.auto_keywords_str = ", ".join(keywords)
             st.session_state.auto_fill_done = True
             st.session_state.run_analysis = True
             st.rerun()
@@ -585,6 +589,8 @@ if analyze_btn and uploaded_file and user_query:
 if st.session_state.get("run_analysis", False) and uploaded_file and log_lines:
     perform_analysis()
     st.session_state.auto_fill_done = False
+    # 分析完成后可清空自动填充字符串，以便下次分析可以重新填充（可选）
+    st.session_state.auto_keywords_str = ""
 elif not uploaded_file and analyze_btn:
     st.info("👆 请上传日志文件")
 
