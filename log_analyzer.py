@@ -163,6 +163,17 @@ class ComponentErrorCodeManager:
             except Exception as e:
                 print(f"警告: 解析 {filename} 失败: {e}")
 
+    def get_all_components(self) -> List[str]:
+        """返回所有已加载的部件全称列表"""
+        return list(self.db.keys())
+
+    def get_component_errors(self, component_full: str) -> Dict[str, ErrorCodeEntry]:
+        """返回指定部件的所有错误码条目"""
+        for comp, entries in self.db.items():
+            if comp.lower() == component_full.lower():
+                return entries.copy()
+        return {}
+
     def query_by_abbreviation(self, abbr: str, error_code: str) -> Optional[ErrorCodeEntry]:
         full = self.ABBREVIATION_MAP.get(abbr.upper())
         if not full:
@@ -382,7 +393,6 @@ def render_screenshot_content(analysis_md, log_highlight):
     """
 
 # ==================== 界面与交互逻辑 ====================
-# 初始化 session_state
 if "auto_fill_done" not in st.session_state:
     st.session_state.auto_fill_done = False
 if "run_analysis" not in st.session_state:
@@ -443,7 +453,6 @@ with col2:
     st.subheader("🔎 分析设置")
     context_lines = st.slider("上下文行数", 20, 500, 80)
     max_lines = st.slider("最大输出行数", 100, 5000, 1500)
-    # 绑定 key，以便动态更新
     extra_keywords_input = st.text_input(
         "附加检索关键词 (用逗号分隔，可选)",
         key="extra_keywords_input",
@@ -451,9 +460,7 @@ with col2:
     )
     analyze_btn = st.button("🚀 开始智能分析", type="primary", use_container_width=True)
 
-# ==================== 分析流程控制 ====================
 def perform_analysis():
-    """实际执行分析逻辑的函数"""
     full_query = st.session_state.user_query_full
     # 1. 错误码知识库查询
     error_kb_parts = []
@@ -472,10 +479,8 @@ def perform_analysis():
         st.divider()
     error_kb_info = "\n".join(error_kb_parts)
 
-    # 2. 获取关键词（从 session_state 或重新提取）
     keywords = st.session_state.extracted_kws
     if not keywords:
-        # 若没有预存，当场提取（通常不会发生）
         extra_kws = [k.strip() for k in extra_keywords_input.split(',') if k.strip()] if extra_keywords_input else []
         keywords = error_assistant.extract_keywords(full_query, extra_keywords=extra_kws)
         st.session_state.extracted_kws = keywords
@@ -483,7 +488,6 @@ def perform_analysis():
     st.markdown("**🔑 使用的检索关键词:**")
     st.write(", ".join(keywords) if keywords else "（未提取到关键词，将使用原始描述子串匹配）")
 
-    # 3. 日志检索
     with st.spinner("检索日志中..."):
         indices, match_cnt = find_relevant_context(log_lines, keywords, context_lines)
         if not indices:
@@ -507,7 +511,6 @@ def perform_analysis():
             with st.expander("查看高亮日志", expanded=True):
                 st.markdown(f"<pre>{log_highlight_html}</pre>", unsafe_allow_html=True)
 
-    # 4. 相似案例
     similar_text = ""
     vec, vcts, meta = load_vectorizer_and_vectors()
     if vec and meta:
@@ -515,14 +518,12 @@ def perform_analysis():
         if sols:
             similar_text = "\n".join(f"- {s}" for s in sols)
 
-    # 5. AI 分析
     with st.spinner("🤖 AI 分析中..."):
         analysis_result = generate_analysis(log_snippet, full_query, similar_text, error_kb_info)
 
     st.subheader("📊 综合分析报告")
     st.markdown(analysis_result)
 
-    # 导出报告
     st.divider()
     st.subheader("📸 导出报告")
     html_str = render_screenshot_content(analysis_result, log_highlight_html.replace("<br>", "\n") if 'log_highlight_html' in locals() else "无")
@@ -544,7 +545,6 @@ def perform_analysis():
     </body></html>
     """, height=80)
 
-    # 反馈
     st.divider()
     st.subheader("📝 提交解决方案")
     user_solution = st.text_area("分享您的解决方案...")
@@ -560,39 +560,30 @@ def perform_analysis():
         else:
             st.warning("请输入内容")
 
-    # 清除分析状态
     st.session_state.run_analysis = False
 
-# 点击分析按钮时的处理
 if analyze_btn and uploaded_file and user_query:
     if not openai.api_key:
         st.error("请先输入 DeepSeek API Key")
     else:
-        # 准备完整查询
         full_q = user_query
         if ocr_text:
             full_q = f"{user_query}\n\n[图片OCR内容]\n{ocr_text}"
         st.session_state.user_query_full = full_q
 
-        # 如果尚未自动填充关键词，则提取并填充
         if not st.session_state.auto_fill_done:
-            # 提取关键词（不含用户手动输入，因为输入框可能还是旧值）
             extra_kws = [k.strip() for k in extra_keywords_input.split(',') if k.strip()] if extra_keywords_input else []
             keywords = error_assistant.extract_keywords(full_q, extra_keywords=extra_kws)
             st.session_state.extracted_kws = keywords
-            # 将关键词以逗号连接，填入输入框的 session_state
             st.session_state.extra_keywords_input = ", ".join(keywords)
             st.session_state.auto_fill_done = True
             st.session_state.run_analysis = True
-            st.rerun()  # 刷新界面显示填充后的关键词
+            st.rerun()
         else:
-            # 已经填充过，直接执行分析
             st.session_state.run_analysis = True
 
-# 当 run_analysis 为 True 时执行分析
 if st.session_state.get("run_analysis", False) and uploaded_file and log_lines:
     perform_analysis()
-    # 重置自动填充标志，以便下次分析可重新提取
     st.session_state.auto_fill_done = False
 elif not uploaded_file and analyze_btn:
     st.info("👆 请上传日志文件")
