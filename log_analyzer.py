@@ -1,5 +1,6 @@
 """
 智能日志分析助手 (集成错误码知识库 + AI 智能关键词提取)
+增强 AI 关键词提取鲁棒性，自动回退备用提取。
 """
 
 import streamlit as st
@@ -31,7 +32,7 @@ st.title("🔍 智能日志分析助手 (错误码知识库 + AI 深度诊断)")
 # ==================== 配置 ====================
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
-DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner")
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")  # 建议使用 chat 模型，reasoner 可能返回思考过程
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
 DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 DASHSCOPE_OCR_MODEL = os.getenv("DASHSCOPE_OCR_MODEL", "qwen-vl-plus")
@@ -203,15 +204,30 @@ class ErrorDiagnosisAssistant:
     def extract_hex_codes(self, text: str) -> List[str]:
         return [m.group(1) for m in self.HEX_CODE_PATTERN.finditer(text)]
 
+    def _fallback_extract_keywords(self, text: str) -> List[str]:
+        """备用提取：从中文描述中提取可能的关键词（如引号内的内容、常见错误描述短语）"""
+        keywords = []
+        # 提取引号内的内容
+        quoted = re.findall(r'[“”"]([^“”"]+)[“”"]', text)
+        keywords.extend(quoted)
+        # 提取中文短语（连续汉字，长度2-6）
+        chinese_phrases = re.findall(r'[\u4e00-\u9fa5]{2,6}', text)
+        # 过滤掉常见停用词
+        stopwords = {'扫描', '报错', '问题', '描述', '日志', '附件', '截图', '执行', '结果', '系统', '软件', '硬件', '尝试', '确认', '再次', '失败', '成功', '是否', '进行', '发现', '出现', '使用', '可能', '需要', '检查', '联系', '服务', '工程师', '解决', '未', '已', '若', '则', '并', '后', '前', '中', '上', '下', '的', '了', '在', '是', '有', '和', '与', '或', '等'}
+        for phrase in chinese_phrases:
+            if phrase not in stopwords and len(phrase) >= 3:
+                keywords.append(phrase)
+        return keywords
+
     def ai_extract_keywords(self, text: str) -> List[str]:
-        """调用 AI 从文本中智能提取关键词"""
+        """调用 AI 从文本中智能提取关键词，增强鲁棒性"""
         if not openai.api_key:
             return []
         prompt = f"""
-请从以下用户问题描述中提取用于日志检索的关键词。
-重点关注：错误码（如 SSW_0x00000070）、错误名称（如“频率校正信噪比异常”）、关键硬件（如“线圈”、“水模”、“梯度”）。
-请以 JSON 数组格式返回，例如 ["SSW_0x00000070", "频率校正", "信噪比"]。
-只返回 JSON 数组，不要包含其他文字。
+请从以下MRI系统问题描述中提取用于日志检索的关键词。
+重点关注：错误码（如 SSW_0x00000070）、错误名称（如“频率校正信噪比异常”）、关键硬件（如“线圈”、“水模”、“梯度”）、关键操作（如“校准”、“定位”）。
+请严格按照 JSON 数组格式返回，例如 ["SSW_0x00000070", "频率校正", "信噪比", "线圈"]。
+只返回 JSON 数组，不要包含任何其他文字、解释或 markdown 标记。
 
 用户描述：
 {text}
@@ -227,13 +243,37 @@ class ErrorDiagnosisAssistant:
                 max_tokens=200
             )
             content = resp.choices[0].message.content.strip()
-            content = re.sub(r'^```json\s*', '', content)
-            content = re.sub(r'\s*```$', '', content)
-            keywords = json.loads(content)
-            if isinstance(keywords, list):
-                return [str(kw).strip() for kw in keywords if str(kw).strip()]
+            # 尝试多种方式提取 JSON 数组
+            # 1. 直接解析
+            try:
+                keywords = json.loads(content)
+                if isinstance(keywords, list):
+                    return [str(kw).strip() for kw in keywords if str(kw).strip()]
+            except:
+                pass
+            # 2. 尝试从 markdown 代码块中提取
+            code_block = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', content, re.DOTALL)
+            if code_block:
+                try:
+                    keywords = json.loads(code_block.group(1))
+                    if isinstance(keywords, list):
+                        return [str(kw).strip() for kw in keywords if str(kw).strip()]
+                except:
+                    pass
+            # 3. 尝试用正则提取方括号内的内容
+            bracket_match = re.search(r'\[(.*)\]', content, re.DOTALL)
+            if bracket_match:
+                inner = bracket_match.group(1)
+                # 按逗号分割，去除引号
+                parts = re.findall(r'"([^"]*)"', inner)
+                if parts:
+                    return [p.strip() for p in parts if p.strip()]
+            # 4. 回退：按逗号分割整个字符串，去除引号
+            parts = re.findall(r'"([^"]*)"', content)
+            if parts:
+                return [p.strip() for p in parts if p.strip()]
         except Exception as e:
-            st.warning(f"AI 关键词提取失败: {e}")
+            st.warning(f"AI 关键词提取调用失败: {e}")
         return []
 
     def extract_keywords(self, text: str, extra_keywords: List[str] = None, use_ai_fallback: bool = True) -> List[str]:
@@ -246,11 +286,16 @@ class ErrorDiagnosisAssistant:
             if hc not in existing_hex:
                 keywords.append(hc)
 
-        # 若正则未提取到任何关键词，且允许 AI fallback，则调用 AI 提取
+        # 如果正则提取为空，尝试 AI 提取
         if not keywords and use_ai_fallback and text.strip():
             with st.spinner("🤖 AI 正在智能提取关键词..."):
                 ai_kws = self.ai_extract_keywords(text)
-                keywords.extend(ai_kws)
+                if ai_kws:
+                    keywords.extend(ai_kws)
+                else:
+                    # AI 也失败，使用备用规则提取
+                    fallback_kws = self._fallback_extract_keywords(text)
+                    keywords.extend(fallback_kws)
 
         if extra_keywords:
             for kw in extra_keywords:
